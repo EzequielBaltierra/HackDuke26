@@ -1,0 +1,20 @@
+# Secrets
+.env.local
+.env
+
+# Expo
+node_modules/
+.expo/
+dist/
+web-build/
+
+# macOS
+.DS_Store
+
+# Native builds
+ios/
+android/
+
+# Logs
+*.log
+npm-debug.log*
