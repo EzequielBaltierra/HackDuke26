@@ -140,24 +140,33 @@ export function ExpeditionCard({ expedition }: Props) {
                   bottom: 10,
                   left: 0,
                   right: 0,
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                  gap: 6,
+                  alignItems: 'center',
                 }}
               >
-                {photos.map((_, i) => (
-                  <View
-                    key={i}
-                    style={{
-                      width: i === photoIndex ? 18 : 7,
-                      height: 7,
-                      borderRadius: 4,
-                      backgroundColor: i === photoIndex
-                        ? colors.tabIconActive
-                        : 'rgba(234,222,208,0.5)',
-                    }}
-                  />
-                ))}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    gap: 6,
+                    backgroundColor: 'rgba(17,7,3,0.45)',
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    borderRadius: 20,
+                  }}
+                >
+                  {photos.map((_, i) => (
+                    <View
+                      key={i}
+                      style={{
+                        width: i === photoIndex ? 18 : 7,
+                        height: 7,
+                        borderRadius: 4,
+                        backgroundColor: i === photoIndex
+                          ? colors.tabIconActive
+                          : 'rgba(234,222,208,0.45)',
+                      }}
+                    />
+                  ))}
+                </View>
               </View>
             </>
           ) : null}
