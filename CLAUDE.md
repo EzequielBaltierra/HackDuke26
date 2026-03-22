@@ -1,69 +1,136 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with this repository.
 
 ## Project
 
-**Root** — A gamified social mobile app for nature lovers.
-HackDuke 2026 hackathon project by Israel, Ezequiel, Emilio, and Cesar.
+**Root** — a gamified social nature exploration mobile app, built for HackDuke 2026 by Israel, Ezequiel, Emilio, and Cesar.
+
+Users take photos of plants/animals, AI identifies the species and generates a fact card, and they earn points and badges. They can also log expeditions (solo or with friends), track them live, and compete on a leaderboard.
+
+Full implementation plan: `docs/superpowers/plans/2026-03-21-root-hackathon.md`
+
+---
 
 ## Tech Stack
 
-- **Frontend:** React Native (Expo SDK 54), TypeScript, NativeWind v2
-- **Backend:** Supabase (PostgreSQL, Storage, Auth)
-- **AI:** OpenAI GPT-4o for species identification
-- **Auth:** Auth0 via expo-auth-session
+| Layer | Technology |
+|---|---|
+| Framework | React Native, Expo SDK 54, Expo Router v6 |
+| Language | TypeScript |
+| Database + Storage | Supabase JS v2 (PostgreSQL + Storage buckets) |
+| Auth | Auth0 via `expo-auth-session` (PKCE flow) — Expo Go compatible |
+| AI | OpenAI GPT-4o Vision — species ID + fact card in one call |
+| Navigation | Expo Router file-based (tabs + stack) |
 
-## Key Commands
+**Not used:** NativeWind was removed (PostCSS incompatibility). Use plain React Native `StyleSheet` or inline styles.
+
+---
+
+## Design Palette
+
+| Name | Hex |
+|---|---|
+| Background | `#eaded0` (warm sand) |
+| Green (primary) | `#4e705e` (forest green) |
+| Maroon | `#361319` |
+| Red-brown | `#6d3a3c` |
+| Text | `#110703` |
+| Tan / muted | `#c7af94` |
+
+---
+
+## File Structure
+
+```
+app/
+  _layout.tsx              # Root layout — wraps with AuthProvider
+  index.tsx                # Redirect: authed → /(tabs), unauthed → /login
+  login.tsx                # Login screen (Auth0 + dev bypass button)
+  (tabs)/
+    _layout.tsx            # Tab bar — 4 tabs: Feed, Post, Leaderboard, Profile
+    index.tsx              # Feed screen (discoveries / expeditions toggle)
+    post.tsx               # Post chooser
+    leaderboard.tsx        # Global leaderboard
+    profile.tsx            # User profile + badges + discovery grid
+  discovery/
+    new.tsx                # 5-step AI flow: pick → scanning → review → posting → done
+    [id].tsx               # Discovery detail with FactCard
+  expedition/
+    new.tsx                # Expedition form
+    live.tsx               # Live stopwatch tracker
+    [id].tsx               # Expedition detail
+
+src/
+  contexts/
+    AuthContext.tsx         # AuthProvider + useAuth() — single source of auth state
+  hooks/
+    useAuth.ts             # Re-exports useAuth from AuthContext
+    useDiscoveries.ts      # Supabase query hook for discoveries
+    useExpeditions.ts      # Supabase query hook for expeditions
+    useProfile.ts          # fetchUserProfile + fetchLeaderboard
+  lib/
+    supabase.ts            # Supabase client singleton
+    openai.ts              # identifySpecies(imageUri) — calls GPT-4o vision
+    points.ts              # calculateDiscoveryPoints, calculateExpeditionPoints,
+                           # awardPoints, trackSpecies, checkAndAwardBadges
+  components/
+    DiscoveryCard.tsx      # Feed card for a discovery
+    ExpeditionCard.tsx     # Feed card for an expedition
+    FactCard.tsx           # AI-generated species fact card
+    PointsToast.tsx        # Animated points earned overlay
+    FeedToggle.tsx         # Expedition | Discovery dual-tab header
+  types/
+    index.ts               # All TypeScript types: User, Discovery, Expedition, etc.
+
+supabase/
+  schema.sql               # Full DB schema (already applied to Supabase)
+```
+
+---
+
+## Auth
+
+Auth is handled by `src/contexts/AuthContext.tsx`. It uses `expo-auth-session` with PKCE (no native modules — works in Expo Go).
+
+- `useAuth()` returns `{ currentUser, loading, isAuthenticated, login, logout, devLogin }`
+- `devLogin()` bypasses Auth0 entirely and creates a `devexplorer` test account in Supabase — use this during local development if Auth0 redirect URIs aren't configured
+- Auth0 redirect URI mismatch: check Metro logs for `[Auth] redirectUri = ...` and add that exact URL to Auth0 Allowed Callback URLs
+
+---
+
+## Environment Variables
+
+Stored in `.env.local` (not committed). Each developer needs their own copy:
+
+```
+EXPO_PUBLIC_SUPABASE_URL=...
+EXPO_PUBLIC_SUPABASE_ANON_KEY=...
+EXPO_PUBLIC_AUTH0_DOMAIN=...
+EXPO_PUBLIC_AUTH0_CLIENT_ID=...
+EXPO_PUBLIC_OPENAI_API_KEY=...
+```
+
+Ask a teammate for the values — they're in the project's shared credentials.
+
+---
+
+## Running Locally
 
 ```bash
-npm start          # Start Expo dev server
-npm run ios        # Run on iOS simulator
-npm run android    # Run on Android emulator
+npm install --legacy-peer-deps
+npx expo start
 ```
 
-## Project Structure
+Scan the QR code with Expo Go. Each developer runs their own Metro server independently — no conflicts. All developers share the same Supabase database.
 
-```
-app/               # Expo Router screens (file-based routing)
-  (tabs)/          # Tab navigation screens
-  discovery/       # Discovery flow screens
-  expedition/      # Expedition flow screens
-src/
-  components/      # Reusable UI components
-  contexts/        # React contexts (AuthContext)
-  hooks/           # Custom hooks (useDiscoveries, useExpeditions, etc.)
-  lib/             # Utilities (supabase, openai, points)
-  types/           # TypeScript type definitions
-supabase/
-  schema.sql       # Database schema
-docs/
-  STYLE_GUIDE.md   # UI design system (MUST follow for all UI work)
-```
+---
 
-## UI Design Guidelines
+## Key Decisions & Gotchas
 
-**IMPORTANT:** All UI implementation MUST follow `docs/STYLE_GUIDE.md`.
-
-### Quick Reference
-
-- **Colors:** cream (#eaded0), forest (#4e705e), maroon (#361319), olive (#6d7c65), sand (#c7af94)
-- **Fonts:** Fraunces (headers), Nunito Sans (body)
-- **Background:** Always use `cream`, never pure white
-- **Text:** Always use `maroon` for primary, never pure black
-- **Tab bar:** Forest green background with custom SVG icons
-
-### Before Implementing UI
-
-1. Read `docs/STYLE_GUIDE.md` thoroughly
-2. Use the defined color palette (no arbitrary colors)
-3. Use Fraunces for headers, Nunito Sans for body
-4. Follow component patterns for cards, tags, buttons
-5. Use 4px-based spacing system
-
-## Code Style
-
-- Use TypeScript for all new files
-- Prefer functional components with hooks
-- Use NativeWind/Tailwind classes where possible, inline styles when needed
-- Keep components focused and reusable
+- **`react-native-auth0` was removed** — it requires a native build and crashes in Expo Go. Use `expo-auth-session` only.
+- **NativeWind was removed** — caused a PostCSS error. Use inline styles or `StyleSheet`.
+- **`ImagePicker.MediaTypeOptions` is deprecated in SDK 54** — use `ImagePicker.MediaType.Images` instead.
+- **Supabase buckets** named `discoveries` and `expeditions` must exist and be set to public for image uploads to work.
+- **Points system** uses diminishing returns: 100% → 50% → 25% → 10% for repeat species discoveries.
+- **Rare species** (`is_rare: true`) have their location withheld from the DB for conservation reasons.
