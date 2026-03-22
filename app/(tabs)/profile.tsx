@@ -211,14 +211,18 @@ export default function ProfileScreen() {
           <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
             <Text style={{ fontSize: 16, fontWeight: '700', color: '#361319', marginBottom: 10 }}>Expeditions</Text>
             {expeditions.map(e => (
-              <View key={e.id} style={{
-                backgroundColor: 'white', borderRadius: 12, padding: 12, marginBottom: 8,
-                flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-                borderWidth: 1, borderColor: '#c7af94',
-              }}>
+              <TouchableOpacity
+                key={e.id}
+                onPress={() => router.push(`/expedition/${e.id}`)}
+                style={{
+                  backgroundColor: 'white', borderRadius: 12, padding: 12, marginBottom: 8,
+                  flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+                  borderWidth: 1, borderColor: '#c7af94',
+                }}
+              >
                 <Text style={{ fontSize: 15, color: '#361319', fontWeight: '600', flex: 1 }}>{e.title}</Text>
-                <Text style={{ fontSize: 13, color: '#4e705e', fontWeight: '700' }}>+{e.points_earned}pts</Text>
-              </View>
+                <Text style={{ fontSize: 13, color: '#4e705e', fontWeight: '700' }}>+{e.points_earned}pts →</Text>
+              </TouchableOpacity>
             ))}
           </View>
         ) : null}

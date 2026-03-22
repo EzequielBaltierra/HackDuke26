@@ -1,6 +1,6 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useExpeditions } from '../../src/hooks/useExpeditions';
 import { Expedition } from '../../src/types';
@@ -8,6 +8,7 @@ import { Expedition } from '../../src/types';
 export default function ExpeditionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { fetchById } = useExpeditions();
+  const router = useRouter();
   const [expedition, setExpedition] = useState<Expedition | null>(null);
 
   useEffect(() => {
@@ -25,6 +26,9 @@ export default function ExpeditionDetailScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }}>
       <SafeAreaView style={{ padding: 16 }}>
+        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 16 }}>
+          <Text style={{ fontSize: 16, color: '#4e705e', fontWeight: '700' }}>← Back</Text>
+        </TouchableOpacity>
         <Text style={{ fontSize: 26, fontWeight: '800', color: '#361319' }}>{expedition.title}</Text>
         <Text style={{ fontSize: 13, color: '#6d3a3c', marginTop: 4, marginBottom: 12, opacity: 0.8 }}>
           by @{expedition.users?.username} · {new Date(expedition.created_at).toLocaleDateString()}
