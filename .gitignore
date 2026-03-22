@@ -2,6 +2,9 @@
 .env.local
 .env
 
+# Claude Code
+.claude/
+
 # Expo
 node_modules/
 .expo/

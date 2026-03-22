@@ -22,10 +22,7 @@ export default function TabsLayout() {
         tabBarShowLabel: false,
         tabBarActiveTintColor: '#eaded0',
         tabBarInactiveTintColor: '#c7af94',
-        headerStyle: { backgroundColor: '#eaded0' },
-        headerTintColor: '#361319',
-        headerTitleStyle: { fontWeight: '700', fontSize: 20 },
-        headerShadowVisible: false,
+        headerShown: false,
       }}
     >
       <Tabs.Screen
