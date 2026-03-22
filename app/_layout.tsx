@@ -6,9 +6,9 @@ import { colors } from '../src/theme/colors';
 import { useRootFonts } from '../src/theme/fonts';
 
 export default function RootLayout() {
-  const [loaded] = useRootFonts();
+  const [loaded, fontError] = useRootFonts();
 
-  if (!loaded) {
+  if (!loaded && !fontError) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bgPrimary, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color={colors.greenAccent} />

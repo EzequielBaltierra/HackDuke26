@@ -85,6 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [response]);
 
   async function loadStoredToken() {
+    // Safety timeout — if Supabase hangs on mobile, don't block forever
+    const timer = setTimeout(() => setLoading(false), 8000);
     try {
       const stored = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
       if (stored) {
@@ -95,7 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch {}
-    setLoading(false);
+    finally {
+      clearTimeout(timer);
+      setLoading(false);
+    }
   }
 
   async function exchangeCode(code: string, codeVerifier: string) {
