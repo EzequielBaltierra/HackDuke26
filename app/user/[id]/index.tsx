@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View,
+  Animated, ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -52,6 +52,7 @@ export default function PublicProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
+  const followScale = useRef(new Animated.Value(1)).current;
 
   const profileUserId = id as string;
   const isOwnProfile = currentUser?.id === profileUserId;
@@ -73,8 +74,12 @@ export default function PublicProfileScreen() {
       .finally(() => setLoading(false));
   }, [profileUserId]);
 
-  async function handleFollowToggle() {
-    await toggleFollowing(profileUserId);
+  function handleFollowToggle() {
+    Animated.sequence([
+      Animated.spring(followScale, { toValue: 0.8, useNativeDriver: true, speed: 60, bounciness: 0 }),
+      Animated.spring(followScale, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 16 }),
+    ]).start();
+    toggleFollowing(profileUserId);
     setFollowerCount(prev => isFollowing ? prev - 1 : prev + 1);
   }
 
@@ -154,25 +159,27 @@ export default function PublicProfileScreen() {
 
           {/* Follow / Unfollow button */}
           {!isOwnProfile ? (
-            <TouchableOpacity
-              onPress={handleFollowToggle}
-              style={{
-                marginTop: 14,
-                paddingHorizontal: 32,
-                paddingVertical: 10,
-                borderRadius: 20,
-                backgroundColor: isFollowing ? colors.bgAccent : colors.greenBase,
-                borderWidth: 1.5,
-                borderColor: isFollowing ? colors.greenBase : colors.greenBase,
-              }}
-            >
-              <Text style={{
-                fontWeight: '700',
-                fontSize: 14,
-                color: isFollowing ? colors.greenBase : colors.bgPrimary,
-              }}>
-                {isFollowing ? 'Following' : 'Follow'}
-              </Text>
+            <TouchableOpacity onPress={handleFollowToggle} activeOpacity={1}>
+              <Animated.View
+                style={{
+                  marginTop: 14,
+                  paddingHorizontal: 32,
+                  paddingVertical: 10,
+                  borderRadius: 20,
+                  backgroundColor: isFollowing ? colors.bgAccent : colors.greenBase,
+                  borderWidth: 1.5,
+                  borderColor: colors.greenBase,
+                  transform: [{ scale: followScale }],
+                }}
+              >
+                <Text style={{
+                  fontWeight: '700',
+                  fontSize: 14,
+                  color: isFollowing ? colors.greenBase : colors.bgPrimary,
+                }}>
+                  {isFollowing ? 'Following' : 'Follow'}
+                </Text>
+              </Animated.View>
             </TouchableOpacity>
           ) : null}
         </View>

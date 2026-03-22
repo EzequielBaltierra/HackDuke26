@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
-import { Image, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Image, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { hrefUserProfile } from '../lib/routes';
 import {
   FeedBadgeShields,
@@ -27,6 +27,17 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
   const [photoIndex, setPhotoIndex] = useState(0);
   const [carouselWidth, setCarouselWidth] = useState(0);
   const photos = expedition.photo_urls ?? [];
+  const dotAnims = useRef(photos.map((_, i) => new Animated.Value(i === 0 ? 18 : 7))).current;
+
+  useEffect(() => {
+    dotAnims.forEach((anim, i) => {
+      Animated.timing(anim, {
+        toValue: i === photoIndex ? 18 : 7,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    });
+  }, [photoIndex]);
   const authorId = expedition.users?.id;
   const isFollowing = authorId ? followingIds?.has(authorId) : false;
 
@@ -162,10 +173,10 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
                 }}
               >
                 {photos.map((_, i) => (
-                  <View
+                  <Animated.View
                     key={i}
                     style={{
-                      width: i === photoIndex ? 18 : 7,
+                      width: dotAnims[i],
                       height: 7,
                       borderRadius: 4,
                       backgroundColor: i === photoIndex

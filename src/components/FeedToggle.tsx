@@ -1,13 +1,26 @@
-import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, TouchableOpacity, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { ff } from '../theme/typography';
 
 type Tab = 'discoveries' | 'expeditions';
 type Props = { active: Tab; onChange: (tab: Tab) => void };
 
-/** Figma-style "Expedition | Discovery" — Faustina, semantic reds per STYLE_GUIDE */
 export function FeedToggle({ active, onChange }: Props) {
+  const expeditionsOpacity = useRef(new Animated.Value(active === 'expeditions' ? 1 : 0.35)).current;
+  const discoveriesOpacity = useRef(new Animated.Value(active === 'discoveries' ? 1 : 0.35)).current;
+  const expeditionsScale = useRef(new Animated.Value(active === 'expeditions' ? 1 : 0.95)).current;
+  const discoveriesScale = useRef(new Animated.Value(active === 'discoveries' ? 1 : 0.95)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(expeditionsOpacity, { toValue: active === 'expeditions' ? 1 : 0.35, duration: 200, useNativeDriver: true }),
+      Animated.timing(discoveriesOpacity, { toValue: active === 'discoveries' ? 1 : 0.35, duration: 200, useNativeDriver: true }),
+      Animated.spring(expeditionsScale, { toValue: active === 'expeditions' ? 1 : 0.95, useNativeDriver: true, speed: 20, bounciness: 6 }),
+      Animated.spring(discoveriesScale, { toValue: active === 'discoveries' ? 1 : 0.95, useNativeDriver: true, speed: 20, bounciness: 6 }),
+    ]).start();
+  }, [active]);
+
   return (
     <View
       style={{
@@ -22,20 +35,21 @@ export function FeedToggle({ active, onChange }: Props) {
       }}
     >
       <TouchableOpacity onPress={() => onChange('expeditions')} activeOpacity={0.7}>
-        <Text
+        <Animated.Text
           style={{
             fontFamily: ff.faustinaSemi,
             fontSize: 32,
             letterSpacing: -0.5,
             color: colors.redBase,
-            opacity: active === 'expeditions' ? 1 : 0.35,
+            opacity: expeditionsOpacity,
+            transform: [{ scale: expeditionsScale }],
           }}
         >
           Expedition
-        </Text>
+        </Animated.Text>
       </TouchableOpacity>
 
-      <Text
+      <Animated.Text
         style={{
           fontFamily: ff.faustinaSemi,
           fontSize: 28,
@@ -45,20 +59,21 @@ export function FeedToggle({ active, onChange }: Props) {
         }}
       >
         |
-      </Text>
+      </Animated.Text>
 
       <TouchableOpacity onPress={() => onChange('discoveries')} activeOpacity={0.7}>
-        <Text
+        <Animated.Text
           style={{
             fontFamily: ff.faustinaSemi,
             fontSize: 32,
             letterSpacing: -0.5,
             color: colors.redAccent,
-            opacity: active === 'discoveries' ? 1 : 0.35,
+            opacity: discoveriesOpacity,
+            transform: [{ scale: discoveriesScale }],
           }}
         >
           Discovery
-        </Text>
+        </Animated.Text>
       </TouchableOpacity>
     </View>
   );

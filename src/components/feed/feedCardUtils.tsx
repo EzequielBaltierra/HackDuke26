@@ -1,5 +1,5 @@
-import React from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import React, { useRef } from 'react';
+import { Animated, Image, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { colors } from '../../theme/colors';
 import { textStyles } from '../../theme/typography';
@@ -74,6 +74,51 @@ export function FeedAvatar({ user }: { user: User | undefined }) {
   );
 }
 
+function FollowButton({ isFollowing, onToggleFollow }: { isFollowing: boolean; onToggleFollow: () => void }) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  function handlePress() {
+    Animated.sequence([
+      Animated.spring(scale, { toValue: 0.75, useNativeDriver: true, speed: 60, bounciness: 0 }),
+      Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 16 }),
+    ]).start();
+    onToggleFollow();
+  }
+
+  return (
+    <TouchableOpacity
+      onPress={handlePress}
+      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      accessibilityRole="button"
+      accessibilityLabel={isFollowing ? 'Unfollow' : 'Follow'}
+    >
+      <Animated.View
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 17,
+          borderWidth: 2,
+          borderColor: isFollowing ? colors.greenBase : colors.redAccent,
+          backgroundColor: isFollowing ? colors.greenBase : 'transparent',
+          justifyContent: 'center',
+          alignItems: 'center',
+          transform: [{ scale }],
+        }}
+      >
+        {isFollowing ? (
+          <Svg width={18} height={18} viewBox="0 0 256 256">
+            <Path d={TREE_PATH} fill={colors.bgPrimary} />
+          </Svg>
+        ) : (
+          <Text style={{ fontSize: 20, color: colors.redAccent, marginTop: -2, fontWeight: '400' }}>
+            +
+          </Text>
+        )}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
 export function FeedUserRow({
   user,
   viewerUserId,
@@ -115,42 +160,7 @@ export function FeedUserRow({
         <View style={{ flex: 1 }}>{UserInfo}</View>
       )}
       {showFollow ? (
-        <TouchableOpacity
-          onPress={onToggleFollow}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          accessibilityRole="button"
-          accessibilityLabel={isFollowing ? 'Unfollow' : 'Follow'}
-        >
-          <View
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 17,
-              borderWidth: 2,
-              borderColor: isFollowing ? colors.greenBase : colors.redAccent,
-              backgroundColor: isFollowing ? colors.greenBase : 'transparent',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            {isFollowing ? (
-              <Svg width={18} height={18} viewBox="0 0 256 256">
-                <Path d={TREE_PATH} fill={colors.bgPrimary} />
-              </Svg>
-            ) : (
-              <Text
-                style={{
-                  fontSize: 20,
-                  color: colors.redAccent,
-                  marginTop: -2,
-                  fontWeight: '400',
-                }}
-              >
-                +
-              </Text>
-            )}
-          </View>
-        </TouchableOpacity>
+        <FollowButton isFollowing={!!isFollowing} onToggleFollow={onToggleFollow!} />
       ) : null}
     </View>
   );
