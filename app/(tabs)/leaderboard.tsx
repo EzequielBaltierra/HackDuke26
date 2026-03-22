@@ -173,8 +173,9 @@ export default function LeaderboardScreen() {
           {(() => {
             const r = getRank(currentUser.total_points);
             return (
-              <View style={{ backgroundColor: r.color, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4, marginLeft: 8 }}>
-                <Text style={{ fontSize: 13, fontWeight: '800', color: '#eaded0' }}>{r.emoji} {r.name}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: r.color, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4, marginLeft: 8 }}>
+                <Icon name={r.iconName as any} size={13} color="#eaded0" />
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#eaded0' }}>{r.name}</Text>
               </View>
             );
           })()}
@@ -258,13 +259,15 @@ export default function LeaderboardScreen() {
                   @{item.username}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                  <View style={{ backgroundColor: tierRank.color, borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 }}>
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#eaded0' }}>{tierRank.emoji} {tierRank.name}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: tierRank.color, borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 }}>
+                    <Icon name={tierRank.iconName as any} size={11} color="#eaded0" />
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#eaded0' }}>{tierRank.name}</Text>
                   </View>
                   {item.streak > 0 ? (
-                    <Text style={[textStyles.postDescription, { fontSize: 12, opacity: 0.8 }]}>
-                      🔥 {item.streak}d
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Icon name="campfire" size={12} color="#6d3a3c" />
+                      <Text style={[textStyles.postDescription, { fontSize: 12, opacity: 0.8 }]}>{item.streak}d</Text>
+                    </View>
                   ) : null}
                 </View>
               </View>

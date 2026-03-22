@@ -52,7 +52,7 @@ export default function FeedScreen() {
         ListEmptyComponent={
           !loading ? (
             <View style={{ alignItems: 'center', marginTop: 80, paddingHorizontal: 32 }}>
-              <Icon name={isExpeditions ? 'footprints' : 'clover'} size={64} color={colors.greenBase} />
+              <Icon name={isExpeditions ? 'person-simple-hike' : 'clover'} size={64} color={colors.greenBase} />
               <Text style={{ fontSize: 20, fontWeight: '800', color: colors.redAccent, marginTop: 16, textAlign: 'center' }}>
                 {isExpeditions ? 'No expeditions yet' : 'No discoveries yet'}
               </Text>

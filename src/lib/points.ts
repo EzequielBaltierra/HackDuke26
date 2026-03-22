@@ -224,18 +224,18 @@ const BADGE_RULES: { type: string; check: (userId: string) => Promise<boolean> }
 
 export type Rank = {
   name: string;
-  emoji: string;
+  iconName: string;
   minPoints: number;
   nextMinPoints: number | null;
   color: string;
 };
 
 const RANKS: Rank[] = [
-  { name: 'Observer',   emoji: '🪴',    minPoints: 0,      nextMinPoints: 750,   color: '#c7af94' },
-  { name: 'Explorer',   emoji: '🌿',    minPoints: 750,    nextMinPoints: 3500,  color: '#4e705e' },
-  { name: 'Tracker',    emoji: '🌲',    minPoints: 3500,   nextMinPoints: 10000, color: '#6d3a3c' },
-  { name: 'Naturalist', emoji: '🌳',    minPoints: 10000,  nextMinPoints: 30000, color: '#2d6a4f' },
-  { name: 'Ecologist',  emoji: '🌳🌲🌿', minPoints: 30000, nextMinPoints: null,  color: '#361319' },
+  { name: 'Observer',   iconName: 'clover',                minPoints: 0,      nextMinPoints: 750,   color: '#c7af94' },
+  { name: 'Explorer',   iconName: 'feather',               minPoints: 750,    nextMinPoints: 3500,  color: '#4e705e' },
+  { name: 'Tracker',    iconName: 'butterfly',             minPoints: 3500,   nextMinPoints: 10000, color: '#6d3a3c' },
+  { name: 'Naturalist', iconName: 'flower-tulip',          minPoints: 10000,  nextMinPoints: 30000, color: '#2d6a4f' },
+  { name: 'Ecologist',  iconName: 'globe-hemisphere-west', minPoints: 30000,  nextMinPoints: null,  color: '#361319' },
 ];
 
 export function getRank(totalPoints: number): Rank & { progress: number } {

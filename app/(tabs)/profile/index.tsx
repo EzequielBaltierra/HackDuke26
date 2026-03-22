@@ -189,7 +189,7 @@ export default function ProfileScreen() {
               backgroundColor: rank.color, borderRadius: 20,
               paddingHorizontal: 14, paddingVertical: 5, marginBottom: 8,
             }}>
-              <Text style={{ fontSize: 16 }}>{rank.emoji}</Text>
+              <Icon name={rank.iconName as IconName} size={18} color="#eaded0" />
               <Text style={{ fontSize: 15, fontWeight: '800', color: '#eaded0', letterSpacing: 0.5 }}>{rank.name}</Text>
             </View>
             {/* Progress bar */}
@@ -201,7 +201,10 @@ export default function ProfileScreen() {
                 {user.total_points.toLocaleString()} / {rank.nextMinPoints.toLocaleString()} pts to next rank
               </Text>
             ) : (
-              <Text style={{ fontSize: 11, color: '#6d3a3c', marginTop: 4 }}>Maximum rank achieved 🌍</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                <Icon name="globe-hemisphere-west" size={12} color="#6d3a3c" />
+                <Text style={{ fontSize: 11, color: '#6d3a3c' }}>Maximum rank achieved</Text>
+              </View>
             )}
           </View>
 
@@ -264,9 +267,10 @@ export default function ProfileScreen() {
           <StatCard label="Spots" value={discoveries.length.toString()} iconName="magnifying-glass" />
         </View>
         {user.streak > 0 ? (
-          <Text style={{ fontSize: 12, color: '#6d3a3c', textAlign: 'center', marginTop: -8, marginBottom: 8, paddingHorizontal: 24, opacity: 0.8 }}>
-            🔥 Post daily to keep your streak alive!
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: -8, marginBottom: 8, paddingHorizontal: 24, opacity: 0.8 }}>
+            <Icon name="campfire" size={13} color="#6d3a3c" />
+            <Text style={{ fontSize: 12, color: '#6d3a3c' }}>Post daily to keep your streak alive!</Text>
+          </View>
         ) : (
           <Text style={{ fontSize: 12, color: '#c7af94', textAlign: 'center', marginTop: -8, marginBottom: 8, paddingHorizontal: 24 }}>
             Post a discovery or expedition today to start a streak
