@@ -11,7 +11,12 @@ import { colors } from '../theme/colors';
 import { textStyles } from '../theme/typography';
 import { Discovery } from '../types';
 
-type Props = { discovery: Discovery };
+type Props = {
+  discovery: Discovery;
+  viewerUserId?: string;
+  followingIds?: Set<string>;
+  onToggleFollow?: (authorUserId: string) => void;
+};
 
 const categoryLabel: Record<string, string> = {
   plants: 'Plants',
@@ -32,9 +37,15 @@ function discoveryLocationLine(d: Discovery) {
   return formatLocationCommaDate(null, d.created_at);
 }
 
-export function DiscoveryCard({ discovery }: Props) {
+export function DiscoveryCard({ discovery, viewerUserId, followingIds, onToggleFollow }: Props) {
   const router = useRouter();
   const openDetail = () => router.push(`/discovery/${discovery.id}`);
+  const authorId = discovery.users?.id;
+  const isFollowing = authorId ? followingIds?.has(authorId) : false;
+
+  const goUser = authorId
+    ? () => router.push({ pathname: '/user/[id]/index', params: { id: authorId } })
+    : undefined;
 
   return (
     <View
@@ -52,15 +63,18 @@ export function DiscoveryCard({ discovery }: Props) {
         elevation: 3,
       }}
     >
-      {/* User row — plain View so inner TouchableOpacity works */}
-      <View style={{ padding: 16, paddingBottom: 0 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}>
         <FeedUserRow
           user={discovery.users}
-          onPressUser={discovery.users?.id ? () => router.push(`/user/${discovery.users!.id}`) : undefined}
+          viewerUserId={viewerUserId}
+          isFollowing={isFollowing}
+          onToggleFollow={
+            authorId && onToggleFollow ? () => onToggleFollow(authorId) : undefined
+          }
+          onPressUser={goUser}
         />
       </View>
 
-      {/* Card body — taps open detail */}
       <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
         <View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
           <Text style={[textStyles.postTitle, { marginBottom: 4 }]}>{discovery.common_name}</Text>

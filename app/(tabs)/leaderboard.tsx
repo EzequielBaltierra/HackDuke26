@@ -22,6 +22,10 @@ const MEDAL_FILL: Record<number, string> = {
   3: '#D4A574',
 };
 
+/** Fixed width so ranks 1–3 and 4+ align; points column uses same right inset */
+const RANK_COLUMN_WIDTH = 64;
+const POINTS_MIN_WIDTH = 88;
+
 function RankBadge({ rank }: { rank: number }) {
   const label = `# ${rank}`;
   if (rank >= 1 && rank <= 3) {
@@ -29,24 +33,39 @@ function RankBadge({ rank }: { rank: number }) {
     return (
       <View
         style={{
-          width: 50,
-          height: 50,
-          borderRadius: 25,
-          justifyContent: 'center',
-          alignItems: 'center',
+          width: RANK_COLUMN_WIDTH,
           marginRight: 10,
-          backgroundColor: fill,
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        <Text style={{ fontFamily: ff.crimsonBold, fontSize: 15, color: colors.textPrimary }} numberOfLines={1}>
-          {label}
-        </Text>
+        <View
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: fill,
+          }}
+        >
+          <Text style={{ fontFamily: ff.crimsonBold, fontSize: 17, color: colors.textPrimary }} numberOfLines={1}>
+            {label}
+          </Text>
+        </View>
       </View>
     );
   }
   return (
-    <View style={{ width: 56, marginRight: 10, justifyContent: 'center' }}>
-      <Text style={{ fontFamily: ff.crimsonBold, fontSize: 18, color: colors.textPrimary }}>{label}</Text>
+    <View
+      style={{
+        width: RANK_COLUMN_WIDTH,
+        marginRight: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Text style={{ fontFamily: ff.crimsonBold, fontSize: 20, color: colors.textPrimary }}>{label}</Text>
     </View>
   );
 }
@@ -176,7 +195,7 @@ export default function LeaderboardScreen() {
           return (
             <TouchableOpacity
               activeOpacity={0.75}
-              onPress={() => router.push({ pathname: '/user/[id]', params: { id: item.id } })}
+              onPress={() => router.push({ pathname: '/user/[id]/index', params: { id: item.id } })}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -232,9 +251,11 @@ export default function LeaderboardScreen() {
                   </Text>
                 ) : null}
               </View>
-              <Text style={{ fontFamily: ff.crimsonBold, fontSize: 17, color: colors.greenAccent }}>
-                {item.total_points.toLocaleString()}
-              </Text>
+              <View style={{ minWidth: POINTS_MIN_WIDTH, alignItems: 'flex-end' }}>
+                <Text style={{ fontFamily: ff.crimsonBold, fontSize: 17, color: colors.greenAccent }}>
+                  {item.total_points.toLocaleString()}
+                </Text>
+              </View>
             </TouchableOpacity>
           );
         }}

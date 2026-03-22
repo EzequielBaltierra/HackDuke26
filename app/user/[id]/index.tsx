@@ -1,4 +1,4 @@
-// app/user/[id].tsx — Read-only public profile screen
+// app/user/[id]/index.tsx — Read-only public profile screen
 // Note: fetchUserProfile also fetches expeditions but the result is intentionally unused here.
 import React, { useEffect, useState } from 'react';
 import {
@@ -6,10 +6,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { fetchUserProfile } from '../../src/hooks/useProfile';
-import { colors } from '../../src/theme/colors';
-import { textStyles } from '../../src/theme/typography';
-import { Badge, Discovery, User } from '../../src/types';
+import { fetchUserProfile } from '../../../src/hooks/useProfile';
+import { colors } from '../../../src/theme/colors';
+import { textStyles } from '../../../src/theme/typography';
+import { Badge, Discovery, User } from '../../../src/types';
 
 const BADGE_LABELS: Record<string, string> = {
   first_discovery: '🌿 First Discovery',
@@ -23,6 +23,8 @@ type Profile = {
   user: User | null;
   badges: Badge[];
   discoveries: Partial<Discovery>[];
+  followerCount: number;
+  followingCount: number;
 };
 
 export default function PublicProfileScreen() {
@@ -67,7 +69,7 @@ export default function PublicProfileScreen() {
     );
   }
 
-  const { user, badges, discoveries } = profile;
+  const { user, badges, discoveries, followerCount, followingCount } = profile;
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
@@ -88,6 +90,28 @@ export default function PublicProfileScreen() {
           {user.bio ? (
             <Text style={[textStyles.postDescription, { color: colors.redBase, textAlign: 'center', marginTop: 4 }]}>{user.bio}</Text>
           ) : null}
+
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 10, paddingHorizontal: 8 }}>
+            <TouchableOpacity
+              onPress={() => router.push({ pathname: '/user/[id]/followers', params: { id: user.id } })}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 15, textAlign: 'center' }}>
+                <Text style={{ fontWeight: '800', color: colors.redAccent }}>{followerCount}</Text>
+                <Text style={{ fontWeight: '400', color: colors.redBase }}> Followers</Text>
+              </Text>
+            </TouchableOpacity>
+            <Text style={{ fontSize: 15, color: colors.redBase, marginHorizontal: 6 }}>|</Text>
+            <TouchableOpacity
+              onPress={() => router.push({ pathname: '/user/[id]/following', params: { id: user.id } })}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 15, textAlign: 'center' }}>
+                <Text style={{ fontWeight: '800', color: colors.redAccent }}>{followingCount}</Text>
+                <Text style={{ fontWeight: '400', color: colors.redBase }}> Following</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Stats */}

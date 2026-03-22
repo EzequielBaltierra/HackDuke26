@@ -12,12 +12,19 @@ import { colors } from '../theme/colors';
 import { textStyles } from '../theme/typography';
 import { Expedition } from '../types';
 
-type Props = { expedition: Expedition };
+type Props = {
+  expedition: Expedition;
+  viewerUserId?: string;
+  followingIds?: Set<string>;
+  onToggleFollow?: (authorUserId: string) => void;
+};
 
-export function ExpeditionCard({ expedition }: Props) {
+export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggleFollow }: Props) {
   const router = useRouter();
   const [photoIndex, setPhotoIndex] = useState(0);
   const photos = expedition.photo_urls ?? [];
+  const authorId = expedition.users?.id;
+  const isFollowing = authorId ? followingIds?.has(authorId) : false;
 
   const distanceStr = formatDistanceMiles(expedition.distance);
   const durationStr = formatElapsed(expedition.duration_seconds);
@@ -26,6 +33,10 @@ export function ExpeditionCard({ expedition }: Props) {
   const openDetail = () => router.push(`/expedition/${expedition.id}`);
 
   const showFooter = Boolean(distanceStr || durationStr || expedition.points_earned > 0);
+
+  const goUser = authorId
+    ? () => router.push({ pathname: '/user/[id]/index', params: { id: authorId } })
+    : undefined;
 
   return (
     <View
@@ -43,15 +54,18 @@ export function ExpeditionCard({ expedition }: Props) {
         elevation: 3,
       }}
     >
-      {/* User row — plain View so inner TouchableOpacity works */}
-      <View style={{ padding: 16, paddingBottom: 0 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}>
         <FeedUserRow
           user={expedition.users}
-          onPressUser={expedition.users?.id ? () => router.push(`/user/${expedition.users!.id}`) : undefined}
+          viewerUserId={viewerUserId}
+          isFollowing={isFollowing}
+          onToggleFollow={
+            authorId && onToggleFollow ? () => onToggleFollow(authorId) : undefined
+          }
+          onPressUser={goUser}
         />
       </View>
 
-      {/* Card body — taps open detail */}
       <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
         <View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
           <Text style={[textStyles.postTitle, { marginBottom: 6 }]}>{expedition.title}</Text>

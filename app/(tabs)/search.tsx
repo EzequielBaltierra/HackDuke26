@@ -5,8 +5,10 @@ import { useRouter } from 'expo-router';
 import { DiscoveryCard } from '../../src/components/DiscoveryCard';
 import { ExpeditionCard } from '../../src/components/ExpeditionCard';
 import { TabBarIcon } from '../../src/components/icons/TabBarIcon';
+import { useAuth } from '../../src/hooks/useAuth';
 import { useDiscoveries } from '../../src/hooks/useDiscoveries';
 import { useExpeditions } from '../../src/hooks/useExpeditions';
+import { useViewerFollowingIds } from '../../src/hooks/useFollows';
 import { supabase } from '../../src/lib/supabase';
 import { colors } from '../../src/theme/colors';
 import { ff, textStyles } from '../../src/theme/typography';
@@ -65,6 +67,8 @@ function UserResultRow({ user, onPress }: { user: User; onPress: () => void }) {
 
 export default function SearchScreen() {
   const router = useRouter();
+  const { currentUser } = useAuth();
+  const { followingIds, toggleFollowing } = useViewerFollowingIds(currentUser?.id);
   const [query, setQuery] = useState('');
   const [userResults, setUserResults] = useState<User[]>([]);
   const { discoveries } = useDiscoveries();
@@ -174,7 +178,11 @@ export default function SearchScreen() {
             People
           </Text>
           {userResults.map(u => (
-            <UserResultRow key={u.id} user={u} onPress={() => router.push(`/user/${u.id}`)} />
+            <UserResultRow
+              key={u.id}
+              user={u}
+              onPress={() => router.push({ pathname: '/user/[id]/index', params: { id: u.id } })}
+            />
           ))}
         </View>
       ) : null}
@@ -185,9 +193,19 @@ export default function SearchScreen() {
         keyExtractor={row => `${row.kind}-${row.item.id}`}
         renderItem={({ item }) =>
           item.kind === 'expedition' ? (
-            <ExpeditionCard expedition={item.item as Expedition} />
+            <ExpeditionCard
+              expedition={item.item as Expedition}
+              viewerUserId={currentUser?.id}
+              followingIds={followingIds}
+              onToggleFollow={toggleFollowing}
+            />
           ) : (
-            <DiscoveryCard discovery={item.item as Discovery} />
+            <DiscoveryCard
+              discovery={item.item as Discovery}
+              viewerUserId={currentUser?.id}
+              followingIds={followingIds}
+              onToggleFollow={toggleFollowing}
+            />
           )
         }
         renderSectionHeader={({ section: { title } }) => (
