@@ -30,7 +30,7 @@ If you cannot identify a specific species, use your best guess with a low confid
 
 export async function identifySpecies(imageUri: string): Promise<AIIdentificationResult> {
   const base64 = await FileSystem.readAsStringAsync(imageUri, {
-    encoding: FileSystem.EncodingType.Base64,
+    encoding: 'base64',
   });
 
   const response = await openai.chat.completions.create({
