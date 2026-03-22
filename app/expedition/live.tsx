@@ -2,11 +2,22 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Location from 'expo-location';
 import { calculateExpeditionPoints, awardPoints } from '../../src/lib/points';
 import { supabase } from '../../src/lib/supabase';
 import { PointsToast } from '../../src/components/PointsToast';
 import { useAuth } from '../../src/hooks/useAuth';
 import { PointsBreakdown } from '../../src/types';
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 export default function LiveExpeditionScreen() {
   const router = useRouter();
@@ -14,27 +25,52 @@ export default function LiveExpeditionScreen() {
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [startTime, setStartTime] = useState<Date | null>(null);
+  const [distanceKm, setDistanceKm] = useState(0);
   const [pointsBreakdown, setPointsBreakdown] = useState<PointsBreakdown | null>(null);
   const [showToast, setShowToast] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastPositionRef = useRef<{ lat: number; lon: number } | null>(null);
+  const locationSubRef = useRef<Location.LocationSubscription | null>(null);
 
   useEffect(() => {
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      locationSubRef.current?.remove();
+    };
   }, []);
 
-  function startExpedition() {
+  async function startExpedition() {
     setRunning(true);
     setStartTime(new Date());
+    setDistanceKm(0);
+    lastPositionRef.current = null;
     intervalRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
+
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status === 'granted') {
+      locationSubRef.current = await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.Balanced, distanceInterval: 10 },
+        (loc) => {
+          const { latitude, longitude } = loc.coords;
+          if (lastPositionRef.current) {
+            const d = haversineKm(lastPositionRef.current.lat, lastPositionRef.current.lon, latitude, longitude);
+            setDistanceKm(prev => prev + d);
+          }
+          lastPositionRef.current = { lat: latitude, lon: longitude };
+        }
+      );
+    }
   }
 
   async function endExpedition() {
     if (intervalRef.current) clearInterval(intervalRef.current);
+    locationSubRef.current?.remove();
     setRunning(false);
     if (!currentUser || !startTime) return;
 
     const durationSeconds = elapsed;
-    const totalPoints = await calculateExpeditionPoints(1, null, true, 0);
+    const finalDistance = distanceKm > 0 ? distanceKm : null;
+    const totalPoints = await calculateExpeditionPoints(1, finalDistance, true, 0);
     const breakdown: PointsBreakdown = { base: totalPoints, new_species_bonus: 0, rare_bonus: 0, total: totalPoints };
     const endTime = new Date();
 
@@ -46,6 +82,7 @@ export default function LiveExpeditionScreen() {
       start_time: startTime.toISOString(),
       end_time: endTime.toISOString(),
       duration_seconds: durationSeconds,
+      distance: finalDistance ? Math.round(finalDistance * 10) / 10 : null,
       vibe_tags: [],
       photo_urls: [],
       points_earned: totalPoints,
@@ -79,6 +116,12 @@ export default function LiveExpeditionScreen() {
             {formatTime(elapsed)}
           </Text>
           <Text style={{ fontSize: 14, color: '#6d3a3c', marginTop: 4 }}>time elapsed</Text>
+          <Text style={{ fontSize: 28, fontWeight: '700', color: '#4e705e', marginTop: 16 }}>
+            {distanceKm >= 1
+              ? `${distanceKm.toFixed(2)} km`
+              : `${Math.round(distanceKm * 1000)} m`}
+          </Text>
+          <Text style={{ fontSize: 14, color: '#6d3a3c', marginTop: 2 }}>distance covered</Text>
         </View>
       ) : (
         <View style={{ height: 60 }} />

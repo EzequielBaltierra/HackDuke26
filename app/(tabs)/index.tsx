@@ -50,10 +50,15 @@ export default function FeedScreen() {
         }
         ListEmptyComponent={
           !loading ? (
-            <View style={{ alignItems: 'center', marginTop: 80 }}>
-              <Text style={{ fontSize: 48 }}>{isExpeditions ? '🥾' : '🌿'}</Text>
-              <Text style={{ fontSize: 16, color: colors.redBase, marginTop: 12, opacity: 0.75 }}>
-                No {activeTab} yet. Be the first!
+            <View style={{ alignItems: 'center', marginTop: 80, paddingHorizontal: 32 }}>
+              <Text style={{ fontSize: 64 }}>{isExpeditions ? '🥾' : '🌿'}</Text>
+              <Text style={{ fontSize: 20, fontWeight: '800', color: colors.redAccent, marginTop: 16, textAlign: 'center' }}>
+                {isExpeditions ? 'No expeditions yet' : 'No discoveries yet'}
+              </Text>
+              <Text style={{ fontSize: 15, color: colors.redBase, marginTop: 8, textAlign: 'center', lineHeight: 22, opacity: 0.75 }}>
+                {isExpeditions
+                  ? 'Log your first hike or nature walk using the Post tab.'
+                  : 'Snap a photo of a plant, insect, or animal to make your first discovery.'}
               </Text>
             </View>
           ) : null
