@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { colors } from '../theme/colors';
 
 type NominatimResult = {
   place_id: number;
@@ -35,6 +36,12 @@ export function LocationPicker({ locationName, onChange }: Props) {
   const [gpsError, setGpsError] = useState<string | null>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentSearch = useRef('');
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
 
   function handleTextChange(text: string) {
     setQuery(text);
@@ -114,34 +121,41 @@ export function LocationPicker({ locationName, onChange }: Props) {
           onChangeText={locked ? undefined : handleTextChange}
           editable={!locked}
           placeholder="Search for a place..."
-          placeholderTextColor="#c7af94"
+          placeholderTextColor={colors.bgAccent}
           style={[
             inputStyle,
             { flex: 1, marginBottom: 0 },
-            locked ? { backgroundColor: '#f5efe8' } : null,
+            locked ? { backgroundColor: colors.bgPrimary } : null,
           ]}
         />
         {locked ? (
-          <TouchableOpacity onPress={clear} style={actionBtnStyle}>
-            <Text style={{ color: '#6d3a3c', fontWeight: '700', fontSize: 16 }}>✕</Text>
+          <TouchableOpacity
+            onPress={clear}
+            style={actionBtnStyle}
+            accessibilityRole="button"
+            accessibilityLabel="Clear location"
+          >
+            <Text style={{ color: colors.redBase, fontWeight: '700', fontSize: 16 }}>✕</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
             onPress={useGPS}
             disabled={gpsLoading}
-            style={[actionBtnStyle, { backgroundColor: '#4e705e' }]}
+            style={[actionBtnStyle, { backgroundColor: colors.greenBase }]}
+            accessibilityRole="button"
+            accessibilityLabel="Use my current location"
           >
             {gpsLoading ? (
-              <ActivityIndicator size="small" color="#eaded0" />
+              <ActivityIndicator size="small" color={colors.bgPrimary} />
             ) : (
-              <Text style={{ color: '#eaded0', fontSize: 12, fontWeight: '700' }}>📍 GPS</Text>
+              <Text style={{ color: colors.bgPrimary, fontSize: 12, fontWeight: '700' }}>📍 GPS</Text>
             )}
           </TouchableOpacity>
         )}
       </View>
 
       {gpsError ? (
-        <Text style={{ color: '#6d3a3c', fontSize: 12, marginTop: 4 }}>{gpsError}</Text>
+        <Text style={{ color: colors.redBase, fontSize: 12, marginTop: 4 }}>{gpsError}</Text>
       ) : null}
 
       {results.length > 0 ? (
@@ -154,8 +168,10 @@ export function LocationPicker({ locationName, onChange }: Props) {
                 resultItemStyle,
                 i === results.length - 1 ? { borderBottomWidth: 0 } : null,
               ]}
+              accessibilityRole="button"
+              accessibilityLabel={r.display_name}
             >
-              <Text style={{ fontSize: 13, color: '#110703' }} numberOfLines={2}>
+              <Text style={{ fontSize: 13, color: colors.textPrimary }} numberOfLines={2}>
                 {r.display_name}
               </Text>
             </TouchableOpacity>
@@ -167,19 +183,19 @@ export function LocationPicker({ locationName, onChange }: Props) {
 }
 
 const inputStyle = {
-  backgroundColor: 'white',
+  backgroundColor: colors.surface,
   borderRadius: 12,
   padding: 14,
   fontSize: 15,
   borderWidth: 1,
-  borderColor: '#c7af94',
-  color: '#110703',
+  borderColor: colors.bgAccent,
+  color: colors.textPrimary,
 };
 
 const actionBtnStyle = {
   borderRadius: 12,
   borderWidth: 1,
-  borderColor: '#c7af94',
+  borderColor: colors.bgAccent,
   paddingHorizontal: 14,
   height: 50,
   justifyContent: 'center' as const,
@@ -187,10 +203,10 @@ const actionBtnStyle = {
 };
 
 const dropdownStyle = {
-  backgroundColor: 'white',
+  backgroundColor: colors.surface,
   borderRadius: 12,
   borderWidth: 1,
-  borderColor: '#c7af94',
+  borderColor: colors.bgAccent,
   marginTop: 4,
   overflow: 'hidden' as const,
 };
