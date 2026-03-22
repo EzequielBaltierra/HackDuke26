@@ -44,6 +44,7 @@ export function LocationPicker({ locationName, onChange }: Props) {
   }, []);
 
   function handleTextChange(text: string) {
+    if (locked) return;
     setQuery(text);
     setResults([]);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -118,7 +119,7 @@ export function LocationPicker({ locationName, onChange }: Props) {
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
         <TextInput
           value={query}
-          onChangeText={locked ? undefined : handleTextChange}
+          onChangeText={handleTextChange}
           editable={!locked}
           placeholder="Search for a place..."
           placeholderTextColor={colors.bgAccent}
