@@ -1,3 +1,4 @@
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
@@ -73,16 +74,27 @@ export default function NewDiscoveryScreen() {
     }
   }
 
+  function base64ToUint8Array(base64: string): Uint8Array {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
   async function postDiscovery() {
-    if (!result || !imageUri || !currentUser) return;
+    if (!result || !imageUri || !currentUser) {
+      Alert.alert('Not ready', 'Missing image, scan result, or user session.');
+      return;
+    }
     setStep('posting');
 
     try {
       const filename = `${currentUser.id}/${Date.now()}.jpg`;
-      const fileBlob = await (await fetch(imageUri)).blob();
+      const base64 = await FileSystem.readAsStringAsync(imageUri, { encoding: 'base64' });
+      const bytes = base64ToUint8Array(base64);
       const { error: uploadError } = await supabase.storage
         .from('discoveries')
-        .upload(filename, fileBlob, { contentType: 'image/jpeg' });
+        .upload(filename, bytes, { contentType: 'image/jpeg' });
 
       if (uploadError) throw uploadError;
 
@@ -128,8 +140,9 @@ export default function NewDiscoveryScreen() {
       setStep('done');
       setShowToast(true);
       setTimeout(() => router.replace('/(tabs)'), 2500);
-    } catch {
-      Alert.alert('Post failed', 'Something went wrong. Try again.');
+    } catch (err: any) {
+      console.error('[postDiscovery error]', err);
+      Alert.alert('Post failed', err?.message ?? String(err));
       setStep('review');
     }
   }
