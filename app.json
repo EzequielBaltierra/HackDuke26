@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Root",
+    "slug": "root",
+    "version": "1.0.0",
+    "scheme": "com.root.app",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.root.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#4e705e"
+      },
+      "package": "com.root.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-camera",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Root uses your location to tag discoveries and expeditions."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
