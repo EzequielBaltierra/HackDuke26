@@ -231,11 +231,11 @@ export type Rank = {
 };
 
 const RANKS: Rank[] = [
-  { name: 'Observer',   emoji: '🌰',    minPoints: 0,      nextMinPoints: 750,   color: '#c7af94' },
-  { name: 'Explorer',   emoji: '🌱',    minPoints: 750,    nextMinPoints: 3500,  color: '#4e705e' },
-  { name: 'Tracker',    emoji: '🪴',    minPoints: 3500,   nextMinPoints: 10000, color: '#6d3a3c' },
-  { name: 'Naturalist', emoji: '🌲',    minPoints: 10000,  nextMinPoints: 30000, color: '#2d6a4f' },
-  { name: 'Ecologist',  emoji: '🌳🌲', minPoints: 30000,  nextMinPoints: null,  color: '#361319' },
+  { name: 'Observer',   emoji: '🪴',    minPoints: 0,      nextMinPoints: 750,   color: '#c7af94' },
+  { name: 'Explorer',   emoji: '🌿',    minPoints: 750,    nextMinPoints: 3500,  color: '#4e705e' },
+  { name: 'Tracker',    emoji: '🌲',    minPoints: 3500,   nextMinPoints: 10000, color: '#6d3a3c' },
+  { name: 'Naturalist', emoji: '🌳',    minPoints: 10000,  nextMinPoints: 30000, color: '#2d6a4f' },
+  { name: 'Ecologist',  emoji: '🌳🌲🌿', minPoints: 30000, nextMinPoints: null,  color: '#361319' },
 ];
 
 export function getRank(totalPoints: number): Rank & { progress: number } {
