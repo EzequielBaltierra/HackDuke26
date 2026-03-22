@@ -1,102 +1,164 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
+import {
+  FeedBadgeShields,
+  FeedUserRow,
+  formatDistanceMiles,
+  formatElapsed,
+  formatLocationCommaDate,
+} from './feed/feedCardUtils';
 import { colors } from '../theme/colors';
-import { typeCard } from '../theme/typography';
+import { textStyles } from '../theme/typography';
 import { Expedition } from '../types';
 
 type Props = { expedition: Expedition };
 
-const typeEmoji: Record<string, string> = {
-  trail: '🥾', hike: '⛰', scenic_view: '🌄', walk: '🚶', nature_spot: '🌿',
-};
-
-function formatDuration(seconds: number | null) {
-  if (seconds == null || seconds <= 0) return null;
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
-
 export function ExpeditionCard({ expedition }: Props) {
   const router = useRouter();
-  const durationLabel = formatDuration(expedition.duration_seconds);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const photos = expedition.photo_urls ?? [];
+
+  const distanceStr = formatDistanceMiles(expedition.distance);
+  const durationStr = formatElapsed(expedition.duration_seconds);
+  const locationLine = formatLocationCommaDate(expedition.location, expedition.created_at);
+
+  const openDetail = () => router.push(`/expedition/${expedition.id}`);
+
+  const showFooter = Boolean(distanceStr || durationStr || expedition.points_earned > 0);
 
   return (
-    <TouchableOpacity
-      onPress={() => router.push(`/expedition/${expedition.id}`)}
+    <View
       style={{
-        backgroundColor: colors.surface,
-        borderRadius: 16,
+        backgroundColor: colors.bgPrimary,
+        borderRadius: 20,
         marginHorizontal: 12,
-        marginVertical: 6,
+        marginVertical: 8,
         overflow: 'hidden',
-        shadowColor: colors.text,
-        shadowOpacity: 0.07,
-        shadowRadius: 8,
-        elevation: 2,
         borderWidth: 1,
         borderColor: colors.bgAccent,
+        shadowColor: colors.textPrimary,
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+        elevation: 3,
       }}
     >
-      {expedition.photo_urls[0] ? (
-        <Image source={{ uri: expedition.photo_urls[0] }} style={{ width: '100%', height: 180 }} resizeMode="cover" />
-      ) : (
-        <View style={{ width: '100%', height: 120, backgroundColor: colors.bg, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontSize: 48 }}>{typeEmoji[expedition.type] ?? '🗺'}</Text>
-        </View>
-      )}
+      <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
+        <View style={{ padding: 16, paddingBottom: 10 }}>
+          <FeedUserRow user={expedition.users} />
 
-      <View style={{ padding: 14 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-          <View style={{
-            width: 36, height: 36, borderRadius: 18,
-            backgroundColor: colors.bg, justifyContent: 'center', alignItems: 'center',
-            borderWidth: 1, borderColor: colors.bgAccent, marginRight: 8,
-          }}>
-            <Text style={{ fontSize: 16 }}>🌿</Text>
-          </View>
-          <Text style={[typeCard.userRowName, { flex: 1 }]}>
-            {expedition.users?.username ?? 'Explorer'}
-          </Text>
-          {expedition.points_earned > 0 ? (
-            <Text style={typeCard.userRowPoints}>
-              +{expedition.points_earned} pts
+          <Text style={[textStyles.postTitle, { marginBottom: 6 }]}>{expedition.title}</Text>
+
+          <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{locationLine}</Text>
+
+          {expedition.vibe_tags?.length > 0 ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+              {expedition.vibe_tags.slice(0, 6).map(tag => (
+                <View
+                  key={tag}
+                  style={{
+                    borderRadius: 20,
+                    paddingHorizontal: 12,
+                    paddingVertical: 5,
+                    backgroundColor: colors.bgAccent,
+                    borderWidth: 1,
+                    borderColor: colors.redBase,
+                  }}
+                >
+                  <Text style={textStyles.vibeTag}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          {expedition.description ? (
+            <Text style={[textStyles.postDescription, { opacity: 0.92, marginBottom: 12 }]} numberOfLines={8}>
+              {expedition.description}
             </Text>
           ) : null}
         </View>
+      </TouchableOpacity>
 
-        <Text style={[typeCard.expeditionTitle, { marginBottom: 6 }]}>
-          {typeEmoji[expedition.type] ?? '🗺'} {expedition.title}
-        </Text>
+      {photos.length > 0 ? (
+        <View>
+          <TouchableOpacity onPress={openDetail} activeOpacity={0.95}>
+            <Image source={{ uri: photos[photoIndex] }} style={{ width: '100%', height: 220 }} resizeMode="cover" />
+          </TouchableOpacity>
+          {photos.length > 1 ? (
+            <>
+              <TouchableOpacity
+                onPress={() => setPhotoIndex(i => Math.max(0, i - 1))}
+                style={{
+                  position: 'absolute',
+                  left: 12,
+                  top: '50%',
+                  marginTop: -18,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: 'rgba(17,7,3,0.35)',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ color: colors.tabIconActive, fontSize: 22, marginTop: -2 }}>‹</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setPhotoIndex(i => Math.min(photos.length - 1, i + 1))}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  marginTop: -18,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: 'rgba(17,7,3,0.35)',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ color: colors.tabIconActive, fontSize: 22, marginTop: -2 }}>›</Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
+        </View>
+      ) : null}
 
-        {expedition.vibe_tags.length > 0 ? (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-            {expedition.vibe_tags.slice(0, 4).map(tag => (
-              <View key={tag} style={{
-                backgroundColor: colors.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 3,
-                borderWidth: 1, borderColor: colors.bgAccent,
-              }}>
-                <Text style={typeCard.vibeChip}>{tag}</Text>
-              </View>
-            ))}
+      {showFooter ? (
+        <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              backgroundColor: colors.bgAccent,
+            }}
+          >
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+              {distanceStr ? <Text style={textStyles.duration}>{distanceStr}</Text> : null}
+              {distanceStr && durationStr ? (
+                <Text style={[textStyles.duration, { opacity: 0.45 }]}>|</Text>
+              ) : null}
+              {durationStr ? <Text style={textStyles.duration}>{durationStr}</Text> : null}
+              {!distanceStr && !durationStr ? (
+                <Text style={[textStyles.duration, { opacity: 0.5 }]}>—</Text>
+              ) : null}
+            </View>
+            <View style={{ paddingHorizontal: 8 }}>
+              <FeedBadgeShields />
+            </View>
+            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+              {expedition.points_earned > 0 ? (
+                <Text style={textStyles.points}>+{expedition.points_earned} points</Text>
+              ) : (
+                <Text style={[textStyles.duration, { opacity: 0.45 }]}>—</Text>
+              )}
+            </View>
           </View>
-        ) : null}
-
-        {expedition.description ? (
-          <Text style={[typeCard.expeditionDescription, { marginBottom: 6, opacity: 0.95 }]} numberOfLines={2}>
-            {expedition.description}
-          </Text>
-        ) : null}
-
-        <Text style={typeCard.meta}>
-          {new Date(expedition.created_at).toLocaleDateString()}
-          {durationLabel ? ` · ${durationLabel}` : ''}
-          {expedition.distance ? ` · ${expedition.distance}km` : ''}
-          {expedition.location ? ` · ${expedition.location}` : ''}
-        </Text>
-      </View>
-    </TouchableOpacity>
+        </TouchableOpacity>
+      ) : null}
+    </View>
   );
 }

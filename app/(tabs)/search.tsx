@@ -1,18 +1,13 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
-import {
-  SectionList,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { SectionList, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DiscoveryCard } from '../../src/components/DiscoveryCard';
 import { ExpeditionCard } from '../../src/components/ExpeditionCard';
+import { TabBarIcon } from '../../src/components/icons/TabBarIcon';
 import { useDiscoveries } from '../../src/hooks/useDiscoveries';
 import { useExpeditions } from '../../src/hooks/useExpeditions';
 import { colors } from '../../src/theme/colors';
-import { fontFamily, type } from '../../src/theme/typography';
+import { ff, textStyles } from '../../src/theme/typography';
 import { Discovery, Expedition } from '../../src/types';
 
 function normalize(q: string) {
@@ -21,13 +16,7 @@ function normalize(q: string) {
 
 function discoveryMatches(d: Discovery, q: string) {
   if (!q) return true;
-  const hay = [
-    d.common_name,
-    d.scientific_name,
-    d.caption,
-    d.users?.username,
-    d.category,
-  ]
+  const hay = [d.common_name, d.scientific_name, d.caption, d.users?.username, d.category]
     .filter(Boolean)
     .join(' ')
     .toLowerCase();
@@ -36,14 +25,7 @@ function discoveryMatches(d: Discovery, q: string) {
 
 function expeditionMatches(e: Expedition, q: string) {
   if (!q) return true;
-  const hay = [
-    e.title,
-    e.description,
-    e.location,
-    e.type,
-    e.users?.username,
-    ...(e.vibe_tags ?? []),
-  ]
+  const hay = [e.title, e.description, e.location, e.type, e.users?.username, ...(e.vibe_tags ?? [])]
     .filter(Boolean)
     .join(' ')
     .toLowerCase();
@@ -90,16 +72,15 @@ export default function SearchScreen() {
   const hasAnyData = discoveries.length > 0 || expeditions.length > 0;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bgPrimary }} edges={['top']}>
       <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 }}>
         <Text
           style={{
-            fontFamily: fontFamily.title,
+            fontFamily: ff.faustinaSemi,
             fontSize: 13,
-            color: colors.red,
+            color: colors.redBase,
             letterSpacing: 1.2,
             textTransform: 'uppercase',
-            opacity: 0.9,
             marginBottom: 10,
           }}
         >
@@ -117,7 +98,9 @@ export default function SearchScreen() {
             minHeight: 48,
           }}
         >
-          <MaterialCommunityIcons name="magnify" size={22} color={colors.blueAccent} style={{ marginRight: 8 }} />
+          <View style={{ marginRight: 8 }}>
+            <TabBarIcon name="magnifyingGlass" color={colors.blueAccent} size={22} />
+          </View>
           <TextInput
             value={query}
             onChangeText={setQuery}
@@ -125,14 +108,13 @@ export default function SearchScreen() {
             placeholderTextColor={colors.bgAccent}
             style={{
               flex: 1,
-              fontFamily: fontFamily.crimson,
+              fontFamily: ff.crimson,
               fontSize: 18,
-              color: colors.text,
+              color: colors.textPrimary,
               paddingVertical: 10,
             }}
             autoCapitalize="none"
             autoCorrect={false}
-            clearButtonMode="while-editing"
           />
         </View>
       </View>
@@ -150,7 +132,7 @@ export default function SearchScreen() {
         renderSectionHeader={({ section: { title } }) => (
           <Text
             style={{
-              fontFamily: fontFamily.crimsonBold,
+              fontFamily: ff.crimsonBold,
               fontSize: 18,
               color: colors.redAccent,
               paddingHorizontal: 16,
@@ -165,27 +147,21 @@ export default function SearchScreen() {
         ListEmptyComponent={
           !hasAnyData ? (
             <View style={{ alignItems: 'center', marginTop: 48, paddingHorizontal: 32 }}>
-              <Text style={{ fontFamily: fontFamily.crimson, fontSize: 16, color: colors.red, textAlign: 'center', opacity: 0.9 }}>
+              <Text style={[textStyles.postDescription, { textAlign: 'center' }]}>
                 Nothing to search yet. Check back after the community posts expeditions and discoveries.
               </Text>
             </View>
           ) : !q ? (
             <View style={{ alignItems: 'center', marginTop: 48, paddingHorizontal: 32 }}>
-              <MaterialCommunityIcons name="magnify" size={48} color={colors.bgAccent} />
-              <Text style={[type.navTitle, { marginTop: 16, textAlign: 'center', fontSize: 20 }]}>
-                Search the community
-              </Text>
-              <Text style={{ fontFamily: fontFamily.crimson, fontSize: 16, color: colors.red, marginTop: 8, textAlign: 'center', opacity: 0.9 }}>
+              <Text style={[textStyles.postTitle, { textAlign: 'center', marginBottom: 8 }]}>Search the community</Text>
+              <Text style={[textStyles.postDescription, { textAlign: 'center', opacity: 0.9 }]}>
                 Enter a species name, place, or explorer to filter expeditions and discoveries.
               </Text>
             </View>
           ) : (
             <View style={{ alignItems: 'center', marginTop: 48, paddingHorizontal: 32 }}>
-              <MaterialCommunityIcons name="magnify" size={48} color={colors.bgAccent} />
-              <Text style={[type.navTitle, { marginTop: 16, fontSize: 20 }]}>
-                No matches
-              </Text>
-              <Text style={{ fontFamily: fontFamily.crimson, fontSize: 16, color: colors.red, marginTop: 8, textAlign: 'center', opacity: 0.85 }}>
+              <Text style={[textStyles.postTitle, { marginBottom: 8 }]}>No matches</Text>
+              <Text style={[textStyles.postDescription, { textAlign: 'center', opacity: 0.9 }]}>
                 Try another keyword or browse the feed.
               </Text>
             </View>

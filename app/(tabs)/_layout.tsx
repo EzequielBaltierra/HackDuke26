@@ -1,88 +1,77 @@
-import { FontAwesome5 } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { View } from 'react-native';
+import { TabBarIcon } from '../../src/components/icons/TabBarIcon';
 import { colors } from '../../src/theme/colors';
-import { type } from '../../src/theme/typography';
 
-const TAB_ACTIVE = colors.bg;
-const TAB_INACTIVE = colors.bgAccent;
-
-/** Matches Figma home bar: feed, post, search, profile, leaderboard */
-const TAB_ICONS = [
-  'binoculars',
-  'leaf',
-  'search',
-  'tree',
-  'trophy',
-] as const;
-
-function TabIcon({ name, focused }: { name: (typeof TAB_ICONS)[number]; focused: boolean }) {
+function tabIcon(
+  icon: 'binoculars' | 'trophy' | 'leaf' | 'magnifyingGlass' | 'tree',
+  focused: boolean,
+) {
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <FontAwesome5
-        name={name}
-        size={22}
-        color={focused ? TAB_ACTIVE : TAB_INACTIVE}
-        solid
+    <View style={{ alignItems: 'center', justifyContent: 'center', opacity: focused ? 1 : 0.55 }}>
+      <TabBarIcon
+        name={icon}
+        color={focused ? colors.tabIconActive : colors.tabIconInactive}
+        size={26}
       />
     </View>
   );
 }
 
+/** Screenshot order: Feed → Leaderboard → Post → Search → Profile */
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         tabBarStyle: {
-          backgroundColor: colors.green,
+          backgroundColor: colors.greenBase,
           borderTopWidth: 2,
           borderTopColor: colors.greenAccent,
-          height: 64,
-          paddingBottom: 8,
+          height: 68,
+          paddingBottom: 10,
           paddingTop: 8,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
         },
         tabBarShowLabel: false,
-        tabBarActiveTintColor: TAB_ACTIVE,
-        tabBarInactiveTintColor: TAB_INACTIVE,
-        headerStyle: { backgroundColor: colors.bg },
-        headerTintColor: colors.redAccent,
-        headerTitleStyle: type.navTitle,
-        headerShadowVisible: false,
+        headerShown: false,
+        tabBarActiveTintColor: colors.tabIconActive,
+        tabBarInactiveTintColor: colors.tabIconInactive,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Feed',
-          tabBarIcon: ({ focused }) => <TabIcon name={TAB_ICONS[0]} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="post"
-        options={{
-          title: 'Post',
-          tabBarIcon: ({ focused }) => <TabIcon name={TAB_ICONS[1]} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ focused }) => <TabIcon name={TAB_ICONS[2]} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ focused }) => <TabIcon name={TAB_ICONS[3]} focused={focused} />,
+          tabBarIcon: ({ focused }) => tabIcon('binoculars', focused),
         }}
       />
       <Tabs.Screen
         name="leaderboard"
         options={{
           title: 'Leaderboard',
-          tabBarIcon: ({ focused }) => <TabIcon name={TAB_ICONS[4]} focused={focused} />,
+          tabBarIcon: ({ focused }) => tabIcon('trophy', focused),
+        }}
+      />
+      <Tabs.Screen
+        name="post"
+        options={{
+          title: 'Post',
+          tabBarIcon: ({ focused }) => tabIcon('leaf', focused),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: 'Search',
+          tabBarIcon: ({ focused }) => tabIcon('magnifyingGlass', focused),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ focused }) => tabIcon('tree', focused),
         }}
       />
     </Tabs>

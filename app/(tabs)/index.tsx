@@ -7,7 +7,6 @@ import { FeedToggle } from '../../src/components/FeedToggle';
 import { useDiscoveries } from '../../src/hooks/useDiscoveries';
 import { useExpeditions } from '../../src/hooks/useExpeditions';
 import { colors } from '../../src/theme/colors';
-import { fontFamily } from '../../src/theme/typography';
 import { Discovery, Expedition } from '../../src/types';
 
 export default function FeedScreen() {
@@ -20,9 +19,9 @@ export default function FeedScreen() {
   const refresh = isExpeditions ? eRefresh : dRefresh;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bgPrimary }} edges={['top']}>
       <FeedToggle active={activeTab} onChange={setActiveTab} />
-      <FlatList
+      <FlatList<Discovery | Expedition>
         data={isExpeditions ? expeditions : discoveries}
         keyExtractor={item => item.id}
         refreshControl={
@@ -37,35 +36,15 @@ export default function FeedScreen() {
         }
         ListEmptyComponent={
           !loading ? (
-            <View style={{ alignItems: 'center', marginTop: 64, paddingHorizontal: 32 }}>
+            <View style={{ alignItems: 'center', marginTop: 80 }}>
               <Text style={{ fontSize: 48 }}>{isExpeditions ? '🥾' : '🌿'}</Text>
-              <Text
-                style={{
-                  fontFamily: fontFamily.crimsonBold,
-                  fontSize: 22,
-                  color: colors.redAccent,
-                  marginTop: 16,
-                  textAlign: 'center',
-                }}
-              >
-                No {activeTab} yet
-              </Text>
-              <Text
-                style={{
-                  fontFamily: fontFamily.crimson,
-                  fontSize: 16,
-                  color: colors.red,
-                  marginTop: 8,
-                  opacity: 0.9,
-                  textAlign: 'center',
-                }}
-              >
-                Be the first to share — switch tabs or pull to refresh.
+              <Text style={{ fontSize: 16, color: colors.redBase, marginTop: 12, opacity: 0.75 }}>
+                No {activeTab} yet. Be the first!
               </Text>
             </View>
           ) : null
         }
-        contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
+        contentContainerStyle={{ paddingBottom: 24 }}
       />
     </SafeAreaView>
   );

@@ -1,86 +1,65 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '../theme/colors';
-import { type } from '../theme/typography';
+import { ff } from '../theme/typography';
 
 type Tab = 'discoveries' | 'expeditions';
+type Props = { active: Tab; onChange: (tab: Tab) => void };
 
-type Props = {
-  active: Tab;
-  onChange: (tab: Tab) => void;
-};
-
+/** Figma-style "Expedition | Discovery" — Faustina, semantic reds per STYLE_GUIDE */
 export function FeedToggle({ active, onChange }: Props) {
   return (
     <View
       style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
         paddingHorizontal: 16,
-        paddingTop: 8,
-        paddingBottom: 16,
-        backgroundColor: colors.bg,
+        paddingVertical: 16,
+        backgroundColor: colors.bgPrimary,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
       }}
     >
-      <View
+      <TouchableOpacity onPress={() => onChange('expeditions')} activeOpacity={0.7}>
+        <Text
+          style={{
+            fontFamily: ff.faustinaSemi,
+            fontSize: 32,
+            letterSpacing: -0.5,
+            color: colors.redBase,
+            opacity: active === 'expeditions' ? 1 : 0.35,
+          }}
+        >
+          Expedition
+        </Text>
+      </TouchableOpacity>
+
+      <Text
         style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.bgAccent,
-          borderRadius: 28,
-          padding: 4,
-          minHeight: 52,
-          borderWidth: 1,
-          borderColor: colors.greenAccent,
+          fontFamily: ff.faustinaSemi,
+          fontSize: 28,
+          color: colors.redAccent,
+          opacity: 0.45,
+          marginHorizontal: 10,
         }}
       >
-        <TouchableOpacity
-          onPress={() => onChange('expeditions')}
-          activeOpacity={0.85}
+        |
+      </Text>
+
+      <TouchableOpacity onPress={() => onChange('discoveries')} activeOpacity={0.7}>
+        <Text
           style={{
-            flex: 1,
-            paddingVertical: 12,
-            borderRadius: 24,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: active === 'expeditions' ? colors.green : 'transparent',
+            fontFamily: ff.faustinaSemi,
+            fontSize: 32,
+            letterSpacing: -0.5,
+            color: colors.redAccent,
+            opacity: active === 'discoveries' ? 1 : 0.35,
           }}
         >
-          <Text
-            style={[
-              type.feedToggle,
-              {
-                color: active === 'expeditions' ? colors.bg : colors.redAccent,
-                opacity: active === 'expeditions' ? 1 : 0.55,
-              },
-            ]}
-          >
-            Expedition
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => onChange('discoveries')}
-          activeOpacity={0.85}
-          style={{
-            flex: 1,
-            paddingVertical: 12,
-            borderRadius: 24,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: active === 'discoveries' ? colors.green : 'transparent',
-          }}
-        >
-          <Text
-            style={[
-              type.feedToggle,
-              {
-                color: active === 'discoveries' ? colors.bg : colors.redAccent,
-                opacity: active === 'discoveries' ? 1 : 0.55,
-              },
-            ]}
-          >
-            Discovery
-          </Text>
-        </TouchableOpacity>
-      </View>
+          Discovery
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }

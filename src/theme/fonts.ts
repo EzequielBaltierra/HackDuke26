@@ -6,7 +6,6 @@ import {
 import { Faustina_600SemiBold } from '@expo-google-fonts/faustina';
 import { useFonts } from 'expo-font';
 
-/** Load design fonts before rendering app UI */
 export function useRootFonts() {
   return useFonts({
     Faustina_600SemiBold,
