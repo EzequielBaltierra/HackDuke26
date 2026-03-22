@@ -8,6 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculateExpeditionPoints, awardPoints, checkAndAwardBadges } from '../../src/lib/points';
 import { supabase } from '../../src/lib/supabase';
+import { LocationPicker } from '../../src/components/LocationPicker';
 import { PointsToast } from '../../src/components/PointsToast';
 import { useAuth } from '../../src/hooks/useAuth';
 import { ExpeditionType, Difficulty, PointsBreakdown } from '../../src/types';
@@ -40,7 +41,9 @@ export default function NewExpeditionScreen() {
   const [title, setTitle] = useState(params.originalTitle ?? '');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<ExpeditionType>((params.originalType as ExpeditionType) ?? 'hike');
-  const [location, setLocation] = useState(params.originalLocation ?? '');
+  const [locationName, setLocationName] = useState(params.originalLocation ?? '');
+  const [locationLat, setLocationLat] = useState<number | null>(null);
+  const [locationLng, setLocationLng] = useState<number | null>(null);
   const [distance, setDistance] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty>((params.originalDifficulty as Difficulty) ?? 'moderate');
   const [selectedVibeTags, setSelectedVibeTags] = useState<string[]>(
@@ -120,7 +123,7 @@ export default function NewExpeditionScreen() {
       Alert.alert('Missing info', 'Please add a title.');
       return;
     }
-    if (!location.trim()) {
+    if (!locationName.trim()) {
       Alert.alert('Location required', 'Please add a location so others can find this expedition.');
       return;
     }
@@ -141,7 +144,9 @@ export default function NewExpeditionScreen() {
         title: title.trim(),
         description: description.trim() || null,
         type,
-        location: location.trim() || null,
+        location: locationName.trim() || null,
+        location_lat: locationLat,
+        location_lng: locationLng,
         distance: distanceKm,
         difficulty,
         vibe_tags: selectedVibeTags,
@@ -185,7 +190,7 @@ export default function NewExpeditionScreen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }}>
+    <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }} keyboardShouldPersistTaps="handled">
       <SafeAreaView style={{ padding: 16 }}>
         {pointsBreakdown ? <PointsToast points={pointsBreakdown} visible={showToast} /> : null}
 
@@ -275,14 +280,16 @@ export default function NewExpeditionScreen() {
           ))}
         </View>
 
-        <Label>Location</Label>
-        <TextInput
-          value={location}
-          onChangeText={isRedo ? undefined : setLocation}
-          editable={!isRedo}
-          placeholder="e.g. Eno River State Park"
-          placeholderTextColor="#c7af94"
-          style={[inputStyle, isRedo ? { opacity: 0.6 } : null]}
+        <Label>Location *</Label>
+        <LocationPicker
+          locationName={locationName}
+          lat={locationLat}
+          lng={locationLng}
+          onChange={(name, lat, lng) => {
+            setLocationName(name);
+            setLocationLat(lat);
+            setLocationLng(lng);
+          }}
         />
 
         <Label>Distance (miles)</Label>
