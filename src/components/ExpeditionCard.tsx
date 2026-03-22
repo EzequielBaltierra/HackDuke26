@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Icon } from './Icon';
 import { hrefUserProfile } from '../lib/routes';
 import {
   FeedBadgeShields,
@@ -215,7 +216,10 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
             <FeedBadgeShields />
           </View>
           <View style={{ alignItems: 'center', paddingHorizontal: 6 }}>
-            <Text style={[textStyles.duration, { fontSize: 12 }]}>🥾 {displayTripCount}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Icon name="footprints" size={12} color={colors.textPrimary} />
+                <Text style={[textStyles.duration, { fontSize: 12 }]}>{displayTripCount}</Text>
+              </View>
           </View>
           <View style={{ flex: 1, alignItems: 'flex-end' }}>
             {expedition.points_earned > 0 ? (

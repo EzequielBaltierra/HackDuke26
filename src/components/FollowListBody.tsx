@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Icon } from './Icon';
 import { useRouter } from 'expo-router';
 import { hrefUserProfile } from '../lib/routes';
 import { colors } from '../theme/colors';
@@ -128,7 +129,7 @@ export function FollowListBody({ users, loading, emptyHint, separatorHorizontalI
                   borderColor: colors.greenAccent,
                 }}
               >
-                <Text style={{ fontSize: 22 }}>🌿</Text>
+                <Icon name="clover" size={22} color={colors.bgPrimary} />
               </View>
             )}
             <View style={{ flex: 1, minWidth: 0 }}>

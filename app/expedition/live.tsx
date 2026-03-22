@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { Icon } from '../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculateExpeditionPoints, awardPoints } from '../../src/lib/points';
 import { supabase } from '../../src/lib/supabase';
@@ -68,7 +69,7 @@ export default function LiveExpeditionScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#eaded0', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
       {pointsBreakdown ? <PointsToast points={pointsBreakdown} visible={showToast} /> : null}
 
-      <Text style={{ fontSize: 64 }}>{running ? '📍' : '🥾'}</Text>
+      <Icon name={running ? 'map-pin-simple' : 'footprints'} size={64} color="#361319" />
       <Text style={{ fontSize: 20, fontWeight: '700', color: '#361319', marginTop: 8 }}>
         {running ? 'Expedition in progress' : 'Ready to explore?'}
       </Text>

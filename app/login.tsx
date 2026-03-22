@@ -48,7 +48,7 @@ export default function LoginScreen() {
         }}
       >
         <Text style={{ color: colors.bg, fontFamily: fontFamily.crimsonBold, fontSize: 18 }}>
-          {loading ? 'Loading...' : 'Get Started 🌿'}
+          {loading ? 'Loading...' : 'Get Started'}
         </Text>
       </TouchableOpacity>
 

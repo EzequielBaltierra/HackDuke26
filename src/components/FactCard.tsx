@@ -3,6 +3,7 @@ import { View, Text } from 'react-native';
 import { colors } from '../theme/colors';
 import { fontFamily, type } from '../theme/typography';
 import { FactCard as FactCardType } from '../types';
+import { Icon, IconName } from './Icon';
 
 type Props = {
   commonName: string;
@@ -12,9 +13,9 @@ type Props = {
   factCard: FactCardType | null;
 };
 
-const categoryEmoji: Record<string, string> = {
-  plants: '🌱', trees: '🌳', flowers: '🌸', fungi: '🍄',
-  insects: '🦋', birds: '🦜', mammals: '🦊', other: '🔍',
+const categoryIcon: Record<string, IconName> = {
+  plants: 'clover', trees: 'clover', flowers: 'flower-tulip', fungi: 'clover',
+  insects: 'butterfly', birds: 'feather', mammals: 'footprints', other: 'magnifying-glass',
 };
 
 export function FactCard({ commonName, scientificName, category, confidence, factCard }: Props) {
@@ -32,7 +33,7 @@ export function FactCard({ commonName, scientificName, category, confidence, fac
       borderColor: colors.bgAccent,
     }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-        <Text style={{ fontSize: 30, marginRight: 10 }}>{categoryEmoji[category] ?? '🔍'}</Text>
+        <Icon name={categoryIcon[category] ?? 'magnifying-glass'} size={30} color={colors.redAccent} />
         <View style={{ flex: 1 }}>
           <Text style={[type.postTitle, { fontSize: 28, color: colors.redAccent }]}>{commonName}</Text>
           {scientificName ? (
@@ -62,10 +63,10 @@ export function FactCard({ commonName, scientificName, category, confidence, fac
       {factCard ? (
         <View style={{ gap: 10, marginTop: 8 }}>
           <Text style={[type.quickFacts, { fontSize: 28, marginBottom: 4 }]}>Quick facts</Text>
-          <FactRow label="📍 Native Region" value={factCard.native_region} />
-          <FactRow label="🏕 Habitat" value={factCard.habitat} />
-          <FactRow label="🌍 Ecological Role" value={factCard.ecological_relevance} />
-          <FactRow label="♻️ Sustainability" value={factCard.sustainability} />
+          <FactRow label="Native Region" value={factCard.native_region} />
+          <FactRow label="Habitat" value={factCard.habitat} />
+          <FactRow label="Ecological Role" value={factCard.ecological_relevance} />
+          <FactRow label="Sustainability" value={factCard.sustainability} />
           <View style={{
             backgroundColor: colors.bg,
             borderRadius: 12,
@@ -74,7 +75,7 @@ export function FactCard({ commonName, scientificName, category, confidence, fac
             borderLeftWidth: 4,
             borderLeftColor: colors.greenAccent,
           }}>
-            <Text style={{ fontFamily: fontFamily.crimsonBold, fontSize: 16, color: colors.green, marginBottom: 4 }}>💡 Did you know?</Text>
+            <Text style={{ fontFamily: fontFamily.crimsonBold, fontSize: 16, color: colors.green, marginBottom: 4 }}>Did you know?</Text>
             <Text style={{ fontFamily: fontFamily.crimson, fontSize: 16, color: colors.text, lineHeight: 24 }}>{factCard.interesting_fact}</Text>
           </View>
         </View>

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View,
 } from 'react-native';
+import { Icon } from '../../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { fetchUserProfile } from '../../../src/hooks/useProfile';
@@ -12,11 +13,11 @@ import { textStyles } from '../../../src/theme/typography';
 import { Badge, Discovery, User } from '../../../src/types';
 
 const BADGE_LABELS: Record<string, string> = {
-  first_discovery: '🌿 First Discovery',
-  trailblazer: '🥾 Trailblazer',
-  explorer: '⛰ Explorer',
-  rare_finder: '🌟 Rare Finder',
-  social_explorer: '👥 Social Explorer',
+  first_discovery: 'First Discovery',
+  trailblazer: 'Trailblazer',
+  explorer: 'Explorer',
+  rare_finder: 'Rare Finder',
+  social_explorer: 'Social Explorer',
 };
 
 type Profile = {
@@ -60,7 +61,7 @@ export default function PublicProfileScreen() {
   if (notFound || !profile?.user) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bgPrimary, padding: 24 }}>
-        <Text style={{ fontSize: 48 }}>🌿</Text>
+        <Icon name="clover" size={48} color={colors.greenBase} />
         <Text style={[textStyles.postTitle, { marginTop: 12, textAlign: 'center' }]}>Explorer not found</Text>
         <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 24 }}>
           <Text style={{ color: colors.greenBase, fontSize: 16 }}>Go back</Text>
@@ -83,7 +84,7 @@ export default function PublicProfileScreen() {
             />
           ) : (
             <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.greenBase, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: colors.bgAccent, marginBottom: 12 }}>
-              <Text style={{ fontSize: 36 }}>🌿</Text>
+              <Icon name="clover" size={36} color={colors.bgPrimary} />
             </View>
           )}
           <Text style={[textStyles.userName, { fontSize: 22, fontWeight: '800' }]}>@{user.username}</Text>
@@ -117,12 +118,12 @@ export default function PublicProfileScreen() {
         {/* Stats */}
         <View style={{ flexDirection: 'row', margin: 16, gap: 12 }}>
           {[
-            { emoji: '⭐', value: user.total_points.toLocaleString(), label: 'Points' },
-            { emoji: '🔥', value: `${user.streak}d`, label: 'Streak' },
-            { emoji: '🔍', value: discoveries.length.toString(), label: 'Spots' },
-          ].map(({ emoji, value, label }) => (
+            { iconName: 'star' as const, value: user.total_points.toLocaleString(), label: 'Points' },
+            { iconName: 'campfire' as const, value: `${user.streak}d`, label: 'Streak' },
+            { iconName: 'magnifying-glass' as const, value: discoveries.length.toString(), label: 'Spots' },
+          ].map(({ iconName, value, label }) => (
             <View key={label} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 14, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.bgAccent }}>
-              <Text style={{ fontSize: 24 }}>{emoji}</Text>
+              <Icon name={iconName} size={24} color={colors.greenBase} />
               <Text style={{ fontSize: 20, fontWeight: '800', color: colors.greenBase, marginTop: 4 }}>{value}</Text>
               <Text style={{ fontSize: 10, color: colors.redBase, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</Text>
             </View>

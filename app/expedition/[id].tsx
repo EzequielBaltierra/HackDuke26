@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Icon } from '../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useExpeditions } from '../../src/hooks/useExpeditions';
 import { useAuth } from '../../src/hooks/useAuth';
@@ -72,7 +73,10 @@ export default function ExpeditionDetailScreen() {
         ) : null}
 
         {expedition.location ? (
-          <Text style={{ fontSize: 14, color: '#6d3a3c', marginBottom: 12 }}>📍 {expedition.location}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 12 }}>
+            <Icon name="map-pin-simple" size={14} color="#6d3a3c" />
+            <Text style={{ fontSize: 14, color: '#6d3a3c' }}>{expedition.location}</Text>
+          </View>
         ) : null}
 
         {expedition.vibe_tags.length > 0 ? (
@@ -82,7 +86,7 @@ export default function ExpeditionDetailScreen() {
         ) : null}
 
         <View style={{ backgroundColor: '#4e705e', borderRadius: 12, padding: 16, marginTop: 8, alignItems: 'center' }}>
-          <Text style={{ fontSize: 22, fontWeight: '800', color: '#eaded0' }}>+{expedition.points_earned} pts earned 🌿</Text>
+          <Text style={{ fontSize: 22, fontWeight: '800', color: '#eaded0' }}>+{expedition.points_earned} pts earned</Text>
         </View>
       </SafeAreaView>
     </ScrollView>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { Icon } from '../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DiscoveryCard } from '../../src/components/DiscoveryCard';
 import { ExpeditionCard } from '../../src/components/ExpeditionCard';
@@ -51,7 +52,7 @@ export default function FeedScreen() {
         ListEmptyComponent={
           !loading ? (
             <View style={{ alignItems: 'center', marginTop: 80 }}>
-              <Text style={{ fontSize: 48 }}>{isExpeditions ? '🥾' : '🌿'}</Text>
+              <Icon name={isExpeditions ? 'footprints' : 'clover'} size={48} color={colors.greenBase} />
               <Text style={{ fontSize: 16, color: colors.redBase, marginTop: 12, opacity: 0.75 }}>
                 No {activeTab} yet. Be the first!
               </Text>

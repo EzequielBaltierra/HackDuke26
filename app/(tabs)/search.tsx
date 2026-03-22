@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, SectionList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Icon } from '../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { DiscoveryCard } from '../../src/components/DiscoveryCard';
@@ -54,7 +55,7 @@ function UserResultRow({ user, onPress }: { user: User; onPress: () => void }) {
         <Image source={{ uri: user.profile_photo_url }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }} />
       ) : (
         <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.greenBase, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-          <Text style={{ fontSize: 18 }}>🌿</Text>
+          <Icon name="clover" size={18} color={colors.bgPrimary} />
         </View>
       )}
       <View style={{ flex: 1 }}>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from '../Icon';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '../../theme/colors';
 import { textStyles } from '../../theme/typography';
@@ -66,7 +67,7 @@ export function FeedAvatar({ user }: { user: User | undefined }) {
         borderColor: colors.redAccent,
       }}
     >
-      <Text style={{ fontSize: 20, color: colors.bgPrimary }}>👤</Text>
+      <Icon name="person-simple-hike" size={20} color={colors.bgPrimary} />
     </View>
   );
 }

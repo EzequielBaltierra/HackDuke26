@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Icon } from '../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { fetchLeaderboard } from '../../src/hooks/useProfile';
@@ -156,7 +157,7 @@ export default function LeaderboardScreen() {
                 borderColor: colors.bgPrimary,
               }}
             >
-              <Text style={{ fontSize: 22 }}>🌿</Text>
+              <Icon name="clover" size={22} color={colors.bgPrimary} />
             </View>
           )}
           <View style={{ flex: 1, minWidth: 0 }}>
@@ -233,7 +234,7 @@ export default function LeaderboardScreen() {
                     borderColor: colors.greenAccent,
                   }}
                 >
-                  <Text style={{ fontSize: 22 }}>🌿</Text>
+                  <Icon name="clover" size={22} color={colors.bgPrimary} />
                 </View>
               )}
               <View style={{ flex: 1, minWidth: 0 }}>

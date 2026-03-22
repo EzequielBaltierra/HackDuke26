@@ -193,7 +193,7 @@ export default function NewExpeditionScreen() {
           <Text style={{ fontSize: 16, color: '#4e705e', fontWeight: '700' }}>← Cancel</Text>
         </TouchableOpacity>
 
-        <Text style={{ fontSize: 24, fontWeight: '800', color: '#361319', marginBottom: 20 }}>Log Expedition 🥾</Text>
+        <Text style={{ fontSize: 24, fontWeight: '800', color: '#361319', marginBottom: 20 }}>Log Expedition</Text>
 
         {/* Photos — required */}
         <Label>{`Photos * (up to ${MAX_PHOTOS})`}</Label>
@@ -222,7 +222,7 @@ export default function NewExpeditionScreen() {
                   backgroundColor: '#4e705e', justifyContent: 'center', alignItems: 'center',
                 }}
               >
-                <Text style={{ color: '#eaded0', fontSize: 13, fontWeight: '700' }}>📷 Camera</Text>
+                <Text style={{ color: '#eaded0', fontSize: 13, fontWeight: '700' }}>Camera</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={pickPhoto}
@@ -317,7 +317,7 @@ export default function NewExpeditionScreen() {
           style={{ backgroundColor: posting ? '#c7af94' : '#4e705e', padding: 18, borderRadius: 16, alignItems: 'center', marginBottom: 40 }}
         >
           <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>
-            {posting ? 'Uploading...' : 'Post Expedition ✨'}
+            {posting ? 'Uploading...' : 'Post Expedition'}
           </Text>
         </TouchableOpacity>
       </SafeAreaView>

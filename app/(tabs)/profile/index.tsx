@@ -3,6 +3,7 @@ import {
   ActivityIndicator, Alert, Image, ScrollView, Text,
   TextInput, TouchableOpacity, View,
 } from 'react-native';
+import { Icon, IconName } from '../../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -16,24 +17,24 @@ import { Badge, Discovery, Expedition, User } from '../../../src/types';
 import { ExpeditionCard } from '../../../src/components/ExpeditionCard';
 
 const BADGE_LABELS: Record<string, string> = {
-  first_discovery: '🌿 First Discovery',
-  trailblazer: '🥾 Trailblazer',
-  explorer: '⛰ Explorer',
-  rare_finder: '🌟 Rare Finder',
-  botanist: '🌿 Botanist',
-  entomologist: '🦋 Entomologist',
-  fungi_hunter: '🍄 Fungi Hunter',
-  collector: '📚 Collector',
-  naturalist: '🌎 Naturalist',
-  summit_seeker: '🏔️ Summit Seeker',
-  long_hauler: '🚶 Long Hauler',
-  weekend_warrior: '🌅 Weekend Warrior',
-  trailhead: '🗺️ Trailhead',
-  social_explorer: '👥 Social Explorer',
-  trail_buddy: '🤝 Trail Buddy',
-  on_a_roll: '🔥 On a Roll',
-  unstoppable: '⚡ Unstoppable',
-  night_owl: '🌙 Night Owl',
+  first_discovery: 'First Discovery',
+  trailblazer: 'Trailblazer',
+  explorer: 'Explorer',
+  rare_finder: 'Rare Finder',
+  botanist: 'Botanist',
+  entomologist: 'Entomologist',
+  fungi_hunter: 'Fungi Hunter',
+  collector: 'Collector',
+  naturalist: 'Naturalist',
+  summit_seeker: 'Summit Seeker',
+  long_hauler: 'Long Hauler',
+  weekend_warrior: 'Weekend Warrior',
+  trailhead: 'Trailhead',
+  social_explorer: 'Social Explorer',
+  trail_buddy: 'Trail Buddy',
+  on_a_roll: 'On a Roll',
+  unstoppable: 'Unstoppable',
+  night_owl: 'Night Owl',
 };
 
 type Profile = {
@@ -147,7 +148,7 @@ export default function ProfileScreen() {
               />
             ) : (
               <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: '#4e705e', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#c7af94' }}>
-                {uploadingPhoto ? <ActivityIndicator color="#eaded0" /> : <Text style={{ fontSize: 36 }}>🌿</Text>}
+                {uploadingPhoto ? <ActivityIndicator color="#eaded0" /> : <Icon name="clover" size={36} color="#eaded0" />}
               </View>
             )}
             <View style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: '#361319', borderRadius: 10, width: 22, height: 22, justifyContent: 'center', alignItems: 'center' }}>
@@ -211,9 +212,9 @@ export default function ProfileScreen() {
         </View>
 
         <View style={{ flexDirection: 'row', margin: 16, gap: 12 }}>
-          <StatCard label="Points" value={user.total_points.toLocaleString()} emoji="⭐" />
-          <StatCard label="Streak" value={`${user.streak}d`} emoji="🔥" />
-          <StatCard label="Spots" value={discoveries.length.toString()} emoji="🔍" />
+          <StatCard label="Points" value={user.total_points.toLocaleString()} iconName="star" />
+          <StatCard label="Streak" value={`${user.streak}d`} iconName="campfire" />
+          <StatCard label="Spots" value={discoveries.length.toString()} iconName="magnifying-glass" />
         </View>
 
         {badges.length > 0 ? (
@@ -268,14 +269,14 @@ export default function ProfileScreen() {
   );
 }
 
-function StatCard({ label, value, emoji }: { label: string; value: string; emoji: string }) {
+function StatCard({ label, value, iconName }: { label: string; value: string; iconName: IconName }) {
   return (
     <View style={{
       flex: 1, backgroundColor: 'white', borderRadius: 14, padding: 14, alignItems: 'center',
       shadowColor: '#110703', shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
       borderWidth: 1, borderColor: '#c7af94',
     }}>
-      <Text style={{ fontSize: 24 }}>{emoji}</Text>
+      <Icon name={iconName} size={24} color="#4e705e" />
       <Text style={{ fontSize: 20, fontWeight: '800', color: '#4e705e', marginTop: 4 }}>{value}</Text>
       <Text style={{ fontSize: 10, color: '#6d3a3c', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</Text>
     </View>
