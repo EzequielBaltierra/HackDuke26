@@ -43,6 +43,7 @@ interface AuthContextType {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   devLogin: () => Promise<void>;
+  refreshCurrentUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -52,6 +53,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: async () => {},
   devLogin: async () => {},
+  refreshCurrentUser: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -184,9 +186,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function refreshCurrentUser() {
+    if (!currentUser) return;
+    const { data } = await supabase.from('users').select('*').eq('id', currentUser.id).single();
+    if (data) setCurrentUser(data);
+  }
+
   return (
     <AuthContext.Provider
-      value={{ currentUser, loading, isAuthenticated: !!currentUser, login, logout, devLogin }}
+      value={{ currentUser, loading, isAuthenticated: !!currentUser, login, logout, devLogin, refreshCurrentUser }}
     >
       {children}
     </AuthContext.Provider>

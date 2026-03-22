@@ -149,7 +149,7 @@ export function LocationPicker({ locationName, onChange }: Props) {
             {gpsLoading ? (
               <ActivityIndicator size="small" color={colors.bgPrimary} />
             ) : (
-              <Text style={{ color: colors.bgPrimary, fontSize: 12, fontWeight: '700' }}>📍 GPS</Text>
+              <Text style={{ color: colors.bgPrimary, fontSize: 12, fontWeight: '700' }}>GPS</Text>
             )}
           </TouchableOpacity>
         )}

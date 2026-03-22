@@ -246,6 +246,13 @@ export function getRank(totalPoints: number): Rank & { progress: number } {
   return { ...rank, progress: Math.min(progress, 1) };
 }
 
+export function getNextRankName(totalPoints: number): string | null {
+  const r = getRank(totalPoints);
+  if (!r.nextMinPoints) return null;
+  const nextRank = RANKS.find(x => x.minPoints === r.nextMinPoints);
+  return nextRank?.name ?? null;
+}
+
 export async function checkAndAwardBadges(userId: string): Promise<string[]> {
   const { data: existing } = await supabase.from('badges').select('badge_type').eq('user_id', userId);
   const existingTypes = new Set((existing ?? []).map(b => b.badge_type));

@@ -2,14 +2,13 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Icon } from './Icon';
-import { hrefUserProfile } from '../lib/routes';
-import { openInMaps } from '../lib/mapLink';
+import { hrefUserProfile, hrefLocation } from '../lib/routes';
+import { expeditionLocationKey } from '../lib/locationKey';
 import {
-  FeedBadgeShields,
   FeedUserRow,
   formatDistanceMiles,
   formatElapsed,
-  formatLocationCommaDate,
+  formatLocationLinePlain,
 } from './feed/feedCardUtils';
 import { colors } from '../theme/colors';
 import { textStyles } from '../theme/typography';
@@ -45,14 +44,25 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
 
   const distanceStr = formatDistanceMiles(expedition.distance);
   const durationStr = formatElapsed(expedition.duration_seconds);
-  const locationLine = formatLocationCommaDate(expedition.location, expedition.created_at);
+  const timeIso = expedition.start_time ?? expedition.created_at;
+  const locationLine = formatLocationLinePlain(expedition.location, timeIso);
   const displayTripCount = expedition.trip_count ?? 1;
 
   const showFooter = Boolean(distanceStr || durationStr || expedition.points_earned > 0);
 
-  const hasCoords = expedition.location_lat != null && expedition.location_lng != null;
+  const locationNavKey = expeditionLocationKey(expedition);
 
   const goUser = authorId ? () => router.push(hrefUserProfile(authorId)) : undefined;
+
+  function openLocationPage() {
+    if (!locationNavKey) return;
+    const title = expedition.location?.trim() || 'Outdoor location';
+    router.push(hrefLocation(locationNavKey, title));
+  }
+
+  function openSearchVibe(tag: string) {
+    router.push(`/(tabs)/search?vibe=${encodeURIComponent(tag)}`);
+  }
 
   function handleScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
     if (carouselWidth === 0) return;
@@ -106,20 +116,9 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
 
         <Text style={[textStyles.postTitle, { marginBottom: 6 }]}>{expedition.title}</Text>
 
-        {hasCoords ? (
-          <TouchableOpacity
-            onPress={() => openInMaps(
-              expedition.location ?? locationLine,
-              expedition.location_lat!,
-              expedition.location_lng!
-            )}
-            activeOpacity={0.7}
-            accessibilityRole="link"
-            accessibilityLabel={`Open ${expedition.location ?? 'location'} in maps`}
-          >
-            <Text style={[textStyles.postLocation, { marginBottom: 10, textDecorationLine: 'underline' }]}>
-              📍 {locationLine}
-            </Text>
+        {locationNavKey ? (
+          <TouchableOpacity onPress={openLocationPage} activeOpacity={0.7} accessibilityRole="link">
+            <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{locationLine}</Text>
           </TouchableOpacity>
         ) : (
           <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{locationLine}</Text>
@@ -128,8 +127,10 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
         {expedition.vibe_tags?.length > 0 ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
             {expedition.vibe_tags.slice(0, 6).map(tag => (
-              <View
+              <TouchableOpacity
                 key={tag}
+                onPress={() => openSearchVibe(tag)}
+                activeOpacity={0.75}
                 style={{
                   borderRadius: 20,
                   paddingHorizontal: 12,
@@ -140,7 +141,7 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
                 }}
               >
                 <Text style={textStyles.vibeTag}>{tag}</Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         ) : null}
@@ -231,9 +232,6 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
             {!distanceStr && !durationStr ? (
               <Text style={[textStyles.duration, { opacity: 0.5 }]}>—</Text>
             ) : null}
-          </View>
-          <View style={{ paddingHorizontal: 8 }}>
-            <FeedBadgeShields />
           </View>
           <View style={{ alignItems: 'center', paddingHorizontal: 6 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>

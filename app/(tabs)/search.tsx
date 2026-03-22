@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Image, SectionList, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Icon } from '../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useGlobalSearchParams, useLocalSearchParams, useRouter } from 'expo-router';
 import { DiscoveryCard } from '../../src/components/DiscoveryCard';
 import { ExpeditionCard } from '../../src/components/ExpeditionCard';
 import { TabBarIcon } from '../../src/components/icons/TabBarIcon';
@@ -69,6 +69,8 @@ function UserResultRow({ user, onPress }: { user: User; onPress: () => void }) {
 
 export default function SearchScreen() {
   const router = useRouter();
+  const localParams = useLocalSearchParams<{ vibe?: string | string[] }>();
+  const globalParams = useGlobalSearchParams<{ vibe?: string | string[] }>();
   const { currentUser } = useAuth();
   const { followingIds, toggleFollowing } = useViewerFollowingIds(currentUser?.id);
   const [query, setQuery] = useState('');
@@ -77,6 +79,12 @@ export default function SearchScreen() {
   const { expeditions } = useExpeditions();
 
   const q = useMemo(() => normalize(query), [query]);
+
+  const rawVibe = localParams.vibe ?? globalParams.vibe;
+  const vibeParam = Array.isArray(rawVibe) ? rawVibe[0] : rawVibe;
+  useEffect(() => {
+    if (vibeParam) setQuery(vibeParam);
+  }, [vibeParam]);
 
   const filteredDiscoveries = useMemo(() => {
     if (!q) return [];
@@ -192,6 +200,7 @@ export default function SearchScreen() {
       <SectionList
         style={{ flex: 1 }}
         sections={sections}
+        stickySectionHeadersEnabled={false}
         keyExtractor={row => `${row.kind}-${row.item.id}`}
         renderItem={({ item }) =>
           item.kind === 'expedition' ? (

@@ -7,3 +7,8 @@ import type { Href } from 'expo-router';
 export function hrefUserProfile(userId: string): Href {
   return `/user/${userId}` as Href;
 }
+
+export function hrefLocation(key: string, title?: string): Href {
+  const q = title ? `?title=${encodeURIComponent(title)}` : '';
+  return `/location/${encodeURIComponent(key)}${q}` as Href;
+}

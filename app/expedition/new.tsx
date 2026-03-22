@@ -16,7 +16,7 @@ import { ExpeditionType, Difficulty, PointsBreakdown } from '../../src/types';
 
 const EXPEDITION_TYPES: ExpeditionType[] = ['trail', 'hike', 'scenic_view', 'walk', 'nature_spot'];
 const DIFFICULTIES: Difficulty[] = ['easy', 'moderate', 'hard'];
-const MAX_PHOTOS = 3;
+const MAX_PHOTOS = 5;
 
 function base64ToUint8Array(base64: string): Uint8Array {
   const binary = atob(base64);
@@ -202,41 +202,43 @@ export default function NewExpeditionScreen() {
 
         {/* Photos — required */}
         <Label>{`Photos * (up to ${MAX_PHOTOS})`}</Label>
-        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-          {photos.map((uri, i) => (
-            <View key={i} style={{ position: 'relative' }}>
-              <Image source={{ uri }} style={{ width: 100, height: 100, borderRadius: 12 }} />
-              <TouchableOpacity
-                onPress={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
-                style={{
-                  position: 'absolute', top: -6, right: -6,
-                  width: 22, height: 22, borderRadius: 11,
-                  backgroundColor: '#6d3a3c', justifyContent: 'center', alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: 'white', fontSize: 12, fontWeight: '700' }}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+        <View style={{ marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: photos.length < MAX_PHOTOS ? 10 : 0 }}>
+            {photos.map((uri, i) => (
+              <View key={i} style={{ position: 'relative' }}>
+                <Image source={{ uri }} style={{ width: 100, height: 100, borderRadius: 12 }} />
+                <TouchableOpacity
+                  onPress={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
+                  style={{
+                    position: 'absolute', top: -6, right: -6,
+                    width: 22, height: 22, borderRadius: 11,
+                    backgroundColor: '#6d3a3c', justifyContent: 'center', alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: '700' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
           {photos.length < MAX_PHOTOS ? (
-            <View style={{ gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
               <TouchableOpacity
                 onPress={takePhoto}
                 style={{
-                  width: 100, height: 46, borderRadius: 12,
+                  flex: 1, minWidth: 0, height: 48, borderRadius: 12,
                   backgroundColor: '#4e705e', justifyContent: 'center', alignItems: 'center',
                 }}
               >
-                <Text style={{ color: '#eaded0', fontSize: 13, fontWeight: '700' }}>Camera</Text>
+                <Text style={{ color: '#eaded0', fontSize: 14, fontWeight: '700' }}>Camera</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={pickPhoto}
                 style={{
-                  width: 100, height: 46, borderRadius: 12,
+                  flex: 1, minWidth: 0, height: 48, borderRadius: 12,
                   borderWidth: 2, borderColor: '#4e705e', justifyContent: 'center', alignItems: 'center',
                 }}
               >
-                <Text style={{ color: '#4e705e', fontSize: 13, fontWeight: '700' }}>Library</Text>
+                <Text style={{ color: '#4e705e', fontSize: 14, fontWeight: '700' }}>Library</Text>
               </TouchableOpacity>
             </View>
           ) : null}
@@ -270,10 +272,10 @@ export default function NewExpeditionScreen() {
         </View>
 
         <Label>Difficulty</Label>
-        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16, alignSelf: 'stretch', width: '100%' }}>
           {DIFFICULTIES.map(d => (
             <SpringPressable key={d} onPress={() => setDifficulty(d)}
-              style={{ flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center',
+              style={{ flex: 1, minWidth: 0, paddingVertical: 12, borderRadius: 12, alignItems: 'center',
                 backgroundColor: difficulty === d ? '#4e705e' : '#c7af94' }}>
               <Text style={{ color: difficulty === d ? '#eaded0' : '#361319', fontWeight: '600', textTransform: 'capitalize' }}>{d}</Text>
             </SpringPressable>
@@ -356,9 +358,16 @@ function SpringPressable({ onPress, style, children }: { onPress: () => void; st
     ]).start();
     onPress();
   }
+  const s = style as Record<string, unknown> | undefined;
+  const fillRow = s != null && s.flex != null;
   return (
-    <TouchableOpacity onPress={handlePress} activeOpacity={1}>
-      <Animated.View style={[style, { transform: [{ scale }] }]}>
+    <TouchableOpacity onPress={handlePress} activeOpacity={1} style={style}>
+      <Animated.View
+        style={[
+          { justifyContent: 'center', alignItems: 'center', transform: [{ scale }] },
+          fillRow ? { flex: 1, alignSelf: 'stretch' } : null,
+        ]}
+      >
         {children}
       </Animated.View>
     </TouchableOpacity>

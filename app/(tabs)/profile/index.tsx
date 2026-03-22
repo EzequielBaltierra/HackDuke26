@@ -12,7 +12,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { fetchUserProfile } from '../../../src/hooks/useProfile';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { supabase } from '../../../src/lib/supabase';
-import { getRank } from '../../../src/lib/points';
+import { getNextRankName, getRank } from '../../../src/lib/points';
 import { colors as themeColors } from '../../../src/theme/colors';
 import { Badge, Discovery, Expedition, User } from '../../../src/types';
 import { ExpeditionCard } from '../../../src/components/ExpeditionCard';
@@ -69,13 +69,15 @@ type Profile = {
 };
 
 export default function ProfileScreen() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, refreshCurrentUser } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [editingBio, setEditingBio] = useState(false);
   const [bioText, setBioText] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameDraft, setUsernameDraft] = useState('');
 
   const reload = useCallback(() => {
     if (currentUser) {
@@ -149,6 +151,32 @@ export default function ProfileScreen() {
     setEditingBio(false);
   }
 
+  async function saveUsername() {
+    if (!currentUser) return;
+    const next = usernameDraft.trim().replace(/^@+/, '').replace(/\s+/g, '');
+    if (next.length < 2 || next.length > 32) {
+      Alert.alert('Username', 'Use 2–32 characters.');
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(next)) {
+      Alert.alert('Username', 'Letters, numbers, and underscores only.');
+      return;
+    }
+    const { data: taken } = await supabase.from('users').select('id').eq('username', next).maybeSingle();
+    if (taken && taken.id !== currentUser.id) {
+      Alert.alert('Username taken', 'Pick another username.');
+      return;
+    }
+    const { error } = await supabase.from('users').update({ username: next }).eq('id', currentUser.id);
+    if (error) {
+      Alert.alert('Could not update', error.message);
+      return;
+    }
+    setProfile(prev => prev ? { ...prev, user: prev.user ? { ...prev.user, username: next } : null } : null);
+    await refreshCurrentUser();
+    setEditingUsername(false);
+  }
+
   if (!profile?.user) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#eaded0' }}>
@@ -159,6 +187,13 @@ export default function ProfileScreen() {
 
   const { user, badges, discoveries, expeditions, followerCount, followingCount } = profile;
   const rank = getRank(user.total_points);
+  const nextRankName = getNextRankName(user.total_points);
+  const ptsToNext =
+    rank.nextMinPoints != null ? Math.max(0, rank.nextMinPoints - user.total_points) : null;
+  const progressPct = Math.min(
+    100,
+    Math.max(0, Number.isFinite(rank.progress) ? Math.round(rank.progress * 100) : 0),
+  );
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }}>
@@ -180,7 +215,18 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
 
-          <Text style={{ fontSize: 22, fontWeight: '800', color: '#361319' }}>@{user.username}</Text>
+          <TouchableOpacity
+            onPress={() => {
+              setUsernameDraft(user.username);
+              setEditingUsername(true);
+            }}
+            activeOpacity={0.75}
+            accessibilityLabel="Edit username"
+          >
+            <Text style={{ fontSize: 22, fontWeight: '800', color: '#361319' }}>
+              @{user.username}
+            </Text>
+          </TouchableOpacity>
 
           {/* Rank badge */}
           <View style={{ alignItems: 'center', marginTop: 10, marginBottom: 4 }}>
@@ -192,20 +238,29 @@ export default function ProfileScreen() {
               <Icon name={rank.iconName as IconName} size={18} color="#eaded0" />
               <Text style={{ fontSize: 15, fontWeight: '800', color: '#eaded0', letterSpacing: 0.5 }}>{rank.name}</Text>
             </View>
-            {/* Progress bar */}
-            <View style={{ width: 180, height: 6, backgroundColor: '#c7af94', borderRadius: 3, overflow: 'hidden' }}>
-              <View style={{ width: `${Math.round(rank.progress * 100)}%`, height: 6, backgroundColor: rank.color, borderRadius: 3 }} />
-            </View>
-            {rank.nextMinPoints ? (
-              <Text style={{ fontSize: 11, color: '#6d3a3c', marginTop: 4 }}>
-                {user.total_points.toLocaleString()} / {rank.nextMinPoints.toLocaleString()} pts to next rank
-              </Text>
-            ) : (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                <Icon name="globe-hemisphere-west" size={12} color="#6d3a3c" />
-                <Text style={{ fontSize: 11, color: '#6d3a3c' }}>Maximum rank achieved</Text>
+            <View style={{ width: '100%', maxWidth: 280, alignSelf: 'center' }}>
+              <View style={{ height: 10, backgroundColor: '#c7af94', borderRadius: 5, overflow: 'hidden', width: '100%' }}>
+                <View
+                  style={{
+                    width: `${progressPct}%`,
+                    height: '100%',
+                    backgroundColor: themeColors.blueAccent,
+                    borderRadius: 5,
+                  }}
+                />
               </View>
-            )}
+              {rank.nextMinPoints ? (
+                <Text style={{ fontSize: 11, color: '#6d3a3c', marginTop: 6, textAlign: 'center', lineHeight: 16 }}>
+                  {user.total_points.toLocaleString()} / {rank.nextMinPoints.toLocaleString()} pts
+                  {nextRankName ? ` · ${ptsToNext?.toLocaleString()} to ${nextRankName}` : ''}
+                </Text>
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 6 }}>
+                  <Icon name="globe-hemisphere-west" size={12} color="#6d3a3c" />
+                  <Text style={{ fontSize: 11, color: '#6d3a3c' }}>Maximum rank achieved</Text>
+                </View>
+              )}
+            </View>
           </View>
 
           {editingBio ? (
@@ -292,6 +347,43 @@ export default function ProfileScreen() {
             </View>
           </View>
         ) : null}
+
+        <Modal visible={editingUsername} transparent animationType="fade">
+          <Pressable
+            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}
+            onPress={() => setEditingUsername(false)}
+          >
+            <Pressable
+              style={{ backgroundColor: '#eaded0', borderRadius: 16, padding: 24, marginHorizontal: 24, width: '90%', maxWidth: 360 }}
+              onPress={() => {}}
+            >
+              <Text style={{ fontSize: 17, fontWeight: '800', color: '#361319', marginBottom: 12 }}>Username</Text>
+              <TextInput
+                value={usernameDraft}
+                onChangeText={setUsernameDraft}
+                placeholder="username"
+                placeholderTextColor="#c7af94"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={{
+                  backgroundColor: 'white', borderRadius: 10, padding: 12,
+                  fontSize: 16, borderWidth: 1, borderColor: '#c7af94', color: '#110703', marginBottom: 16,
+                }}
+              />
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity onPress={saveUsername} style={{ flex: 1, backgroundColor: '#4e705e', padding: 12, borderRadius: 10, alignItems: 'center' }}>
+                  <Text style={{ color: '#eaded0', fontWeight: '700' }}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setEditingUsername(false)}
+                  style={{ flex: 1, backgroundColor: '#c7af94', padding: 12, borderRadius: 10, alignItems: 'center' }}
+                >
+                  <Text style={{ color: '#361319', fontWeight: '700' }}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
 
         {/* Badge description modal */}
         <Modal visible={selectedBadge !== null} transparent animationType="fade">

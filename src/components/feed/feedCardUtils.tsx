@@ -22,6 +22,38 @@ export function formatLocationCommaDate(location: string | null | undefined, cre
   return date;
 }
 
+/** `(City, State - HH:MM)` using local time from `iso`. */
+export function formatParenLocationTime(location: string | null | undefined, iso: string) {
+  const t = new Date(iso);
+  const timeStr = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
+  const loc = location?.trim();
+  if (!loc) {
+    return `(— - ${timeStr})`;
+  }
+  return `(${loc} - ${timeStr})`;
+}
+
+export function formatDiscoveryParenTime(iso: string) {
+  const t = new Date(iso);
+  const timeStr = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
+  return `(Wildlife sighting - ${timeStr})`;
+}
+
+/** Plain feed line: place · HH:MM (no emoji or parens). */
+export function formatLocationLinePlain(location: string | null | undefined, iso: string) {
+  const t = new Date(iso);
+  const timeStr = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
+  const loc = location?.trim();
+  if (!loc) return `— · ${timeStr}`;
+  return `${loc} · ${timeStr}`;
+}
+
+export function formatDiscoveryLocationPlain(iso: string) {
+  const t = new Date(iso);
+  const timeStr = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
+  return `Wildlife sighting · ${timeStr}`;
+}
+
 export function formatDistanceMiles(distance: number | null | undefined) {
   if (distance == null) return null;
   return `${distance} miles`;
@@ -167,22 +199,3 @@ export function FeedUserRow({
   );
 }
 
-export function FeedBadgeShields() {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-      {[0, 1].map(i => (
-        <View
-          key={i}
-          style={{
-            width: 22,
-            height: 26,
-            borderWidth: 1.5,
-            borderColor: colors.redBase,
-            borderRadius: 3,
-            opacity: 0.75,
-          }}
-        />
-      ))}
-    </View>
-  );
-}

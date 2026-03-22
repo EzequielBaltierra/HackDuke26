@@ -1,12 +1,13 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { hrefUserProfile } from '../lib/routes';
+import { hrefUserProfile, hrefLocation } from '../lib/routes';
+import { discoveryLocationKey } from '../lib/locationKey';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import {
-  FeedBadgeShields,
   FeedUserRow,
+  formatDiscoveryLocationPlain,
   formatFeedDate,
-  formatLocationCommaDate,
+  formatLocationLinePlain,
 } from './feed/feedCardUtils';
 import { colors } from '../theme/colors';
 import { textStyles } from '../theme/typography';
@@ -33,9 +34,12 @@ const categoryLabel: Record<string, string> = {
 function discoveryLocationLine(d: Discovery) {
   const date = formatFeedDate(d.created_at);
   if (d.is_sensitive) {
-    return `Location withheld, ${date}`;
+    return `Location withheld · ${date}`;
   }
-  return formatLocationCommaDate(null, d.created_at);
+  if (discoveryLocationKey(d)) {
+    return formatDiscoveryLocationPlain(d.created_at);
+  }
+  return formatLocationLinePlain(null, d.created_at);
 }
 
 export function DiscoveryCard({ discovery, viewerUserId, followingIds, onToggleFollow }: Props) {
@@ -45,6 +49,17 @@ export function DiscoveryCard({ discovery, viewerUserId, followingIds, onToggleF
   const isFollowing = authorId ? followingIds?.has(authorId) : false;
 
   const goUser = authorId ? () => router.push(hrefUserProfile(authorId)) : undefined;
+  const locKey = discoveryLocationKey(discovery);
+
+  function openLocationPage() {
+    if (!locKey) return;
+    router.push(hrefLocation(locKey, 'Wildlife sighting'));
+  }
+
+  function openSearchCategory() {
+    const label = categoryLabel[discovery.category] ?? discovery.category;
+    router.push(`/(tabs)/search?vibe=${encodeURIComponent(label)}`);
+  }
 
   return (
     <View
@@ -84,12 +99,22 @@ export function DiscoveryCard({ discovery, viewerUserId, followingIds, onToggleF
             </Text>
           ) : null}
 
-          <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{discoveryLocationLine(discovery)}</Text>
+          {locKey ? (
+            <TouchableOpacity onPress={openLocationPage} activeOpacity={0.7} accessibilityRole="link">
+              <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{discoveryLocationLine(discovery)}</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{discoveryLocationLine(discovery)}</Text>
+          )}
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-            <View style={{ borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: colors.bgAccent, borderWidth: 1, borderColor: colors.redBase }}>
+            <TouchableOpacity
+              onPress={openSearchCategory}
+              activeOpacity={0.75}
+              style={{ borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: colors.bgAccent, borderWidth: 1, borderColor: colors.redBase }}
+            >
               <Text style={textStyles.vibeTag}>{categoryLabel[discovery.category] ?? discovery.category}</Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {discovery.caption ? (
@@ -118,9 +143,6 @@ export function DiscoveryCard({ discovery, viewerUserId, followingIds, onToggleF
             <Text style={[textStyles.duration, { opacity: 0.9 }]} numberOfLines={1}>
               {formatFeedDate(discovery.created_at)}
             </Text>
-          </View>
-          <View style={{ paddingHorizontal: 8 }}>
-            <FeedBadgeShields />
           </View>
           <View style={{ flex: 1, alignItems: 'flex-end' }}>
             {discovery.points_earned > 0 ? (
