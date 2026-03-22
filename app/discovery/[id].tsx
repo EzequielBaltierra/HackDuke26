@@ -4,6 +4,8 @@ import { ActivityIndicator, Image, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FactCard } from '../../src/components/FactCard';
 import { useDiscoveries } from '../../src/hooks/useDiscoveries';
+import { colors } from '../../src/theme/colors';
+import { fontFamily, type } from '../../src/theme/typography';
 import { Discovery } from '../../src/types';
 
 export default function DiscoveryDetailScreen() {
@@ -17,21 +19,23 @@ export default function DiscoveryDetailScreen() {
 
   if (!discovery) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#eaded0' }}>
-        <ActivityIndicator size="large" color="#4e705e" />
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator size="large" color={colors.greenAccent} />
       </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }}>
       <Image source={{ uri: discovery.image_url }} style={{ width: '100%', height: 300 }} resizeMode="cover" />
       <View style={{ padding: 16 }}>
-        <Text style={{ fontSize: 12, color: '#6d3a3c', opacity: 0.8 }}>
+        <Text style={{ fontFamily: fontFamily.crimson, fontSize: 16, color: colors.red, opacity: 0.9 }}>
           by @{discovery.users?.username} · {new Date(discovery.created_at).toLocaleDateString()}
         </Text>
         {discovery.caption ? (
-          <Text style={{ fontSize: 16, color: '#110703', marginTop: 8, marginBottom: 4 }}>{discovery.caption}</Text>
+          <Text style={[type.postDescription, { fontSize: 22, lineHeight: 30, marginTop: 10, marginBottom: 4 }]}>
+            {discovery.caption}
+          </Text>
         ) : null}
       </View>
       <FactCard

@@ -3,6 +3,8 @@ import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchUserProfile } from '../../src/hooks/useProfile';
 import { useAuth } from '../../src/hooks/useAuth';
+import { colors } from '../../src/theme/colors';
+import { fontFamily, type } from '../../src/theme/typography';
 import { Badge, Discovery, Expedition, User } from '../../src/types';
 
 const BADGE_LABELS: Record<string, string> = {
@@ -32,8 +34,8 @@ export default function ProfileScreen() {
 
   if (!profile?.user) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#eaded0' }}>
-        <ActivityIndicator size="large" color="#4e705e" />
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator size="large" color={colors.greenAccent} />
       </SafeAreaView>
     );
   }
@@ -41,38 +43,37 @@ export default function ProfileScreen() {
   const { user, badges, discoveries, expeditions } = profile;
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }}>
       <SafeAreaView>
-        {/* Header */}
-        <View style={{ padding: 24, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#c7af94' }}>
+        <View style={{ padding: 24, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: colors.bgAccent }}>
           <View style={{
             width: 80, height: 80, borderRadius: 40,
-            backgroundColor: '#4e705e', justifyContent: 'center', alignItems: 'center',
-            marginBottom: 12, borderWidth: 2, borderColor: '#c7af94',
+            backgroundColor: colors.green, justifyContent: 'center', alignItems: 'center',
+            marginBottom: 12, borderWidth: 2, borderColor: colors.greenAccent,
           }}>
             <Text style={{ fontSize: 36 }}>🌿</Text>
           </View>
-          <Text style={{ fontSize: 22, fontWeight: '800', color: '#361319' }}>@{user.username}</Text>
+          <Text style={[type.expeditionUserName, { fontSize: 28, color: colors.redAccent }]}>@{user.username}</Text>
           {user.bio ? (
-            <Text style={{ fontSize: 14, color: '#6d3a3c', textAlign: 'center', marginTop: 4 }}>{user.bio}</Text>
+            <Text style={{ fontFamily: fontFamily.crimson, fontSize: 15, color: colors.red, textAlign: 'center', marginTop: 4 }}>
+              {user.bio}
+            </Text>
           ) : null}
         </View>
 
-        {/* Stats */}
         <View style={{ flexDirection: 'row', margin: 16, gap: 12 }}>
           <StatCard label="Points" value={user.total_points.toLocaleString()} emoji="⭐" />
           <StatCard label="Streak" value={`${user.streak}d`} emoji="🔥" />
           <StatCard label="Spots" value={discoveries.length.toString()} emoji="🔍" />
         </View>
 
-        {/* Badges */}
         {badges.length > 0 ? (
           <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#361319', marginBottom: 10 }}>Badges</Text>
+            <Text style={{ fontFamily: fontFamily.crimsonBold, fontSize: 18, color: colors.redAccent, marginBottom: 10 }}>Badges</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {badges.map(b => (
-                <View key={b.id} style={{ backgroundColor: '#c7af94', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 }}>
-                  <Text style={{ fontSize: 13, fontWeight: '600', color: '#361319' }}>
+                <View key={b.id} style={{ backgroundColor: colors.bgAccent, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 }}>
+                  <Text style={{ fontFamily: fontFamily.crimsonSemi, fontSize: 13, color: colors.redAccent }}>
                     {BADGE_LABELS[b.badge_type] ?? b.badge_type}
                   </Text>
                 </View>
@@ -81,10 +82,9 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
-        {/* Discovery grid */}
         {discoveries.length > 0 ? (
           <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#361319', marginBottom: 10 }}>Discoveries</Text>
+            <Text style={{ fontFamily: fontFamily.crimsonBold, fontSize: 18, color: colors.redAccent, marginBottom: 10 }}>Discoveries</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
               {discoveries.map(d => (
                 d.image_url ? (
@@ -95,18 +95,17 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
-        {/* Expeditions list */}
         {expeditions.length > 0 ? (
           <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#361319', marginBottom: 10 }}>Expeditions</Text>
+            <Text style={{ fontFamily: fontFamily.crimsonBold, fontSize: 18, color: colors.redAccent, marginBottom: 10 }}>Expeditions</Text>
             {expeditions.map(e => (
               <View key={e.id} style={{
-                backgroundColor: 'white', borderRadius: 12, padding: 12, marginBottom: 8,
+                backgroundColor: colors.surface, borderRadius: 12, padding: 12, marginBottom: 8,
                 flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-                borderWidth: 1, borderColor: '#c7af94',
+                borderWidth: 1, borderColor: colors.bgAccent,
               }}>
-                <Text style={{ fontSize: 15, color: '#361319', fontWeight: '600', flex: 1 }}>{e.title}</Text>
-                <Text style={{ fontSize: 13, color: '#4e705e', fontWeight: '700' }}>+{e.points_earned}pts</Text>
+                <Text style={{ fontFamily: fontFamily.crimsonSemi, fontSize: 16, color: colors.redAccent, flex: 1 }}>{e.title}</Text>
+                <Text style={{ fontFamily: fontFamily.crimsonBold, fontSize: 14, color: colors.greenAccent }}>+{e.points_earned}pts</Text>
               </View>
             ))}
           </View>
@@ -114,9 +113,9 @@ export default function ProfileScreen() {
 
         <TouchableOpacity
           onPress={logout}
-          style={{ margin: 16, padding: 14, borderRadius: 12, backgroundColor: '#6d3a3c', alignItems: 'center' }}
+          style={{ margin: 16, padding: 14, borderRadius: 12, backgroundColor: colors.red, alignItems: 'center' }}
         >
-          <Text style={{ color: '#eaded0', fontWeight: '700', fontSize: 15 }}>Sign Out</Text>
+          <Text style={{ color: colors.bg, fontFamily: fontFamily.crimsonBold, fontSize: 16 }}>Sign Out</Text>
         </TouchableOpacity>
       </SafeAreaView>
     </ScrollView>
@@ -126,13 +125,13 @@ export default function ProfileScreen() {
 function StatCard({ label, value, emoji }: { label: string; value: string; emoji: string }) {
   return (
     <View style={{
-      flex: 1, backgroundColor: 'white', borderRadius: 14, padding: 14, alignItems: 'center',
-      shadowColor: '#110703', shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
-      borderWidth: 1, borderColor: '#c7af94',
+      flex: 1, backgroundColor: colors.surface, borderRadius: 14, padding: 14, alignItems: 'center',
+      shadowColor: colors.text, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
+      borderWidth: 1, borderColor: colors.bgAccent,
     }}>
       <Text style={{ fontSize: 24 }}>{emoji}</Text>
-      <Text style={{ fontSize: 20, fontWeight: '800', color: '#4e705e', marginTop: 4 }}>{value}</Text>
-      <Text style={{ fontSize: 10, color: '#6d3a3c', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</Text>
+      <Text style={{ fontFamily: fontFamily.crimsonBold, fontSize: 20, color: colors.greenAccent, marginTop: 4 }}>{value}</Text>
+      <Text style={{ fontFamily: fontFamily.crimsonBold, fontSize: 10, color: colors.red, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</Text>
     </View>
   );
 }

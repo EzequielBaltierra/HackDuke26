@@ -3,6 +3,8 @@ import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchLeaderboard } from '../../src/hooks/useProfile';
 import { useAuth } from '../../src/hooks/useAuth';
+import { colors } from '../../src/theme/colors';
+import { fontFamily, type } from '../../src/theme/typography';
 import { User } from '../../src/types';
 
 const RANK_EMOJI = ['🥇', '🥈', '🥉'];
@@ -21,17 +23,19 @@ export default function LeaderboardScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#eaded0' }}>
-        <ActivityIndicator size="large" color="#4e705e" />
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator size="large" color={colors.greenAccent} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#eaded0' }}>
-      <View style={{ padding: 20, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#c7af94' }}>
-        <Text style={{ fontSize: 28, fontWeight: '800', color: '#361319' }}>🏆 Leaderboard</Text>
-        <Text style={{ fontSize: 13, color: '#6d3a3c', marginTop: 4, opacity: 0.8 }}>All-time points</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <View style={{ padding: 20, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: colors.bgAccent }}>
+        <Text style={[type.titleHeaderAccent, { fontSize: 32, textAlign: 'center' }]}>🏆 Leaderboard</Text>
+        <Text style={{ fontFamily: fontFamily.crimson, fontSize: 14, color: colors.red, marginTop: 4, opacity: 0.85 }}>
+          All-time points
+        </Text>
       </View>
 
       <FlatList
@@ -42,21 +46,31 @@ export default function LeaderboardScreen() {
           return (
             <View style={{
               flexDirection: 'row', alignItems: 'center',
-              backgroundColor: isMe ? '#4e705e' : 'white',
+              backgroundColor: isMe ? colors.green : colors.surface,
               marginHorizontal: 12, marginVertical: 4, borderRadius: 14, padding: 14,
-              borderWidth: 1, borderColor: isMe ? '#4e705e' : '#c7af94',
-              shadowColor: '#110703', shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+              borderWidth: 1, borderColor: isMe ? colors.greenAccent : colors.bgAccent,
+              shadowColor: colors.text, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
             }}>
               <Text style={{ fontSize: 22, width: 36 }}>{RANK_EMOJI[index] ?? `${index + 1}.`}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 16, fontWeight: '700', color: isMe ? '#eaded0' : '#361319' }}>
+                <Text style={{
+                  fontFamily: fontFamily.crimsonBold,
+                  fontSize: 17,
+                  color: isMe ? colors.bg : colors.redAccent,
+                }}>
                   @{item.username}{isMe ? ' (you)' : ''}
                 </Text>
                 {item.streak > 0 ? (
-                  <Text style={{ fontSize: 12, color: isMe ? '#c7af94' : '#6d3a3c' }}>🔥 {item.streak} day streak</Text>
+                  <Text style={{ fontFamily: fontFamily.crimson, fontSize: 12, color: isMe ? colors.bgAccent : colors.red }}>
+                    🔥 {item.streak} day streak
+                  </Text>
                 ) : null}
               </View>
-              <Text style={{ fontSize: 18, fontWeight: '800', color: isMe ? '#eaded0' : '#4e705e' }}>
+              <Text style={{
+                fontFamily: fontFamily.crimsonBold,
+                fontSize: 18,
+                color: isMe ? colors.bg : colors.greenAccent,
+              }}>
                 {item.total_points.toLocaleString()}
               </Text>
             </View>
