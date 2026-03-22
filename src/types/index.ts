@@ -60,6 +60,13 @@ export type Expedition = {
   users?: User;
   discoveries?: Discovery[];
   participants?: User[];
+  original_expedition_id: string | null;
+  trip_count: number;
+  original_creator_username: string | null;
+  original_expedition?: {
+    id: string;
+    trip_count: number;
+  } | null;
 };
 
 export type Badge = {

@@ -14,6 +14,7 @@ import { supabase } from '../../../src/lib/supabase';
 import { getRank } from '../../../src/lib/points';
 import { colors as themeColors } from '../../../src/theme/colors';
 import { Badge, Discovery, Expedition, User } from '../../../src/types';
+import { ExpeditionCard } from '../../../src/components/ExpeditionCard';
 
 const BADGE_LABELS: Record<string, string> = {
   first_discovery: '🌿 First Discovery',
@@ -40,7 +41,7 @@ type Profile = {
   user: User | null;
   badges: Badge[];
   discoveries: Partial<Discovery>[];
-  expeditions: Partial<Expedition>[];
+  expeditions: Expedition[];
   followerCount: number;
   followingCount: number;
 };
@@ -271,21 +272,12 @@ export default function ProfileScreen() {
         ) : null}
 
         {expeditions.length > 0 ? (
-          <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#361319', marginBottom: 10 }}>Expeditions</Text>
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#361319', paddingHorizontal: 16, marginBottom: 10 }}>
+              Expeditions
+            </Text>
             {expeditions.map(e => (
-              <TouchableOpacity
-                key={e.id}
-                onPress={() => router.push(`/expedition/${e.id}`)}
-                style={{
-                  backgroundColor: 'white', borderRadius: 12, padding: 12, marginBottom: 8,
-                  flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-                  borderWidth: 1, borderColor: '#c7af94',
-                }}
-              >
-                <Text style={{ fontSize: 15, color: '#361319', fontWeight: '600', flex: 1 }}>{e.title}</Text>
-                <Text style={{ fontSize: 13, color: '#4e705e', fontWeight: '700' }}>+{e.points_earned}pts →</Text>
-              </TouchableOpacity>
+              <ExpeditionCard key={e.id} expedition={e} />
             ))}
           </View>
         ) : null}
