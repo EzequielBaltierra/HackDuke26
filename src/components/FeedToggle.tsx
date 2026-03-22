@@ -13,8 +13,9 @@ export function FeedToggle({ active, onChange }: Props) {
     <View style={{
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
       paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingVertical: 12,
       backgroundColor: '#eaded0',
     }}>
       <TouchableOpacity onPress={() => onChange('expeditions')} style={{ paddingRight: 16 }}>

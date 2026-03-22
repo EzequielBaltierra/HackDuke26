@@ -32,6 +32,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Root',
+          headerShown: false,
           tabBarIcon: ({ focused }) => <TabIcon emoji="🌿" focused={focused} />,
         }}
       />
