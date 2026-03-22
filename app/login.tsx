@@ -1,20 +1,20 @@
-import { useAuth0 } from 'react-native-auth0';
+import { useAuth } from '../src/hooks/useAuth';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
-  const { authorize, user, isLoading } = useAuth0();
+  const { login, devLogin, currentUser, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) router.replace('/(tabs)');
-  }, [user]);
+    if (currentUser) router.replace('/(tabs)');
+  }, [currentUser]);
 
   async function handleLogin() {
     try {
-      await authorize();
+      await login();
     } catch (e) {
       console.error('Login failed', e);
     }
@@ -30,18 +30,26 @@ export default function LoginScreen() {
 
       <TouchableOpacity
         onPress={handleLogin}
-        disabled={isLoading}
+        disabled={loading}
         style={{
           backgroundColor: '#4e705e',
           paddingHorizontal: 48,
           paddingVertical: 16,
           borderRadius: 32,
-          opacity: isLoading ? 0.6 : 1,
+          opacity: loading ? 0.6 : 1,
         }}
       >
         <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>
-          {isLoading ? 'Loading...' : 'Get Started 🌿'}
+          {loading ? 'Loading...' : 'Get Started 🌿'}
         </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={devLogin}
+        disabled={loading}
+        style={{ marginTop: 16, paddingVertical: 10, paddingHorizontal: 24 }}
+      >
+        <Text style={{ color: '#110703', fontSize: 13, opacity: 0.4 }}>Dev bypass (skip auth)</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

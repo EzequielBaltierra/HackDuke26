@@ -1,15 +1,12 @@
-import { Auth0Provider } from 'react-native-auth0';
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { AuthProvider } from '../src/contexts/AuthContext';
 
 export default function RootLayout() {
   return (
-    <Auth0Provider
-      domain={process.env.EXPO_PUBLIC_AUTH0_DOMAIN!}
-      clientId={process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!}
-    >
+    <AuthProvider>
       <StatusBar style="dark" />
       <Slot />
-    </Auth0Provider>
+    </AuthProvider>
   );
 }
