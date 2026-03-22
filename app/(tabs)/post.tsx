@@ -7,8 +7,8 @@ export default function PostScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#eaded0', justifyContent: 'center', padding: 24, gap: 16 }}>
-      <Text style={{ fontSize: 28, fontWeight: '800', color: '#361319', textAlign: 'center', marginBottom: 16 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#eaded0', padding: 24, gap: 16 }}>
+      <Text style={{ fontSize: 28, fontWeight: '800', color: '#361319', textAlign: 'center', marginBottom: 16, marginTop: 8 }}>
         What are you sharing?
       </Text>
 
