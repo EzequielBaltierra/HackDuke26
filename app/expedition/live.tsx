@@ -229,7 +229,7 @@ export default function LiveExpeditionScreen() {
   }
 
   const draft = getLiveExpeditionDraft();
-  const locationTitle = draft?.locationLabel ?? 'Expedition';
+  const locationTitle = draft?.locationLabel || 'Live expedition';
 
   const h = Math.floor(elapsed / 3600);
   const m = Math.floor((elapsed % 3600) / 60);
