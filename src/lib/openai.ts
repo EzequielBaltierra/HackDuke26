@@ -3,7 +3,7 @@ import * as FileSystem from 'expo-file-system';
 import { AIIdentificationResult } from '../types';
 
 const openai = new OpenAI({
-  apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY!,
+  apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY!.trim(),
   dangerouslyAllowBrowser: true,
 });
 
@@ -60,11 +60,13 @@ export async function identifySpecies(imageUri: string): Promise<AIIdentificatio
   const content = response.choices[0]?.message?.content;
   if (!content) throw new Error('No response from AI');
 
+  // Strip markdown fences if present (GPT sometimes wraps JSON anyway)
+  const stripped = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
   try {
-    return JSON.parse(content) as AIIdentificationResult;
+    return JSON.parse(stripped) as AIIdentificationResult;
   } catch {
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const jsonMatch = stripped.match(/\{[\s\S]*\}/);
     if (jsonMatch) return JSON.parse(jsonMatch[0]) as AIIdentificationResult;
-    throw new Error('Could not parse AI response');
+    throw new Error(`Could not parse AI response: ${stripped.slice(0, 100)}`);
   }
 }

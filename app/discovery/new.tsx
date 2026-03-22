@@ -33,7 +33,7 @@ export default function NewDiscoveryScreen() {
       return;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType.Images,
+      mediaTypes: ['images'],
       quality: 0.8,
       allowsEditing: true,
       aspect: [4, 3],
@@ -66,8 +66,9 @@ export default function NewDiscoveryScreen() {
       const identified = await identifySpecies(uri);
       setResult(identified);
       setStep('review');
-    } catch {
-      Alert.alert('Scan failed', 'Could not identify species. Try a clearer photo.');
+    } catch (err: any) {
+      console.error('[identifySpecies error]', err);
+      Alert.alert('Scan failed', err?.message ?? 'Could not identify species. Try a clearer photo.');
       setStep('pick');
     }
   }
