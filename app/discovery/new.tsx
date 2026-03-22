@@ -1,9 +1,10 @@
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator, Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View,
+  ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { identifySpecies } from '../../src/lib/openai';
@@ -33,7 +34,7 @@ export default function NewDiscoveryScreen() {
       return;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType.Images,
+      mediaTypes: ['images'],
       quality: 0.8,
       allowsEditing: true,
       aspect: [4, 3],
@@ -66,22 +67,34 @@ export default function NewDiscoveryScreen() {
       const identified = await identifySpecies(uri);
       setResult(identified);
       setStep('review');
-    } catch {
-      Alert.alert('Scan failed', 'Could not identify species. Try a clearer photo.');
+    } catch (err: any) {
+      console.error('[identifySpecies error]', err);
+      Alert.alert('Scan failed', err?.message ?? 'Could not identify species. Try a clearer photo.');
       setStep('pick');
     }
   }
 
+  function base64ToUint8Array(base64: string): Uint8Array {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
   async function postDiscovery() {
-    if (!result || !imageUri || !currentUser) return;
+    if (!result || !imageUri || !currentUser) {
+      Alert.alert('Not ready', 'Missing image, scan result, or user session.');
+      return;
+    }
     setStep('posting');
 
     try {
       const filename = `${currentUser.id}/${Date.now()}.jpg`;
-      const fileBlob = await (await fetch(imageUri)).blob();
+      const base64 = await FileSystem.readAsStringAsync(imageUri, { encoding: 'base64' });
+      const bytes = base64ToUint8Array(base64);
       const { error: uploadError } = await supabase.storage
         .from('discoveries')
-        .upload(filename, fileBlob, { contentType: 'image/jpeg' });
+        .upload(filename, bytes, { contentType: 'image/jpeg' });
 
       if (uploadError) throw uploadError;
 
@@ -127,8 +140,9 @@ export default function NewDiscoveryScreen() {
       setStep('done');
       setShowToast(true);
       setTimeout(() => router.replace('/(tabs)'), 2500);
-    } catch {
-      Alert.alert('Post failed', 'Something went wrong. Try again.');
+    } catch (err: any) {
+      console.error('[postDiscovery error]', err);
+      Alert.alert('Post failed', err?.message ?? String(err));
       setStep('review');
     }
   }
@@ -163,7 +177,8 @@ export default function NewDiscoveryScreen() {
 
   if (step === 'review' && result) {
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }} keyboardShouldPersistTaps="handled">
         <SafeAreaView>
           {imageUri ? <Image source={{ uri: imageUri }} style={{ width: '100%', height: 260 }} resizeMode="cover" /> : null}
           <FactCard
@@ -200,6 +215,7 @@ export default function NewDiscoveryScreen() {
           </View>
         </SafeAreaView>
       </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 

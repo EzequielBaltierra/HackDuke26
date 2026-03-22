@@ -14,7 +14,7 @@ export function useDiscoveries(userId?: string) {
     setLoading(true);
     let query = supabase
       .from('discoveries')
-      .select('*, users(id, username, profile_photo_url, total_points)')
+      .select('*, users!discoveries_user_id_fkey(id, username, profile_photo_url, total_points)')
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -28,7 +28,7 @@ export function useDiscoveries(userId?: string) {
   async function fetchById(id: string): Promise<Discovery | null> {
     const { data } = await supabase
       .from('discoveries')
-      .select('*, users(id, username, profile_photo_url, total_points)')
+      .select('*, users!discoveries_user_id_fkey(id, username, profile_photo_url, total_points)')
       .eq('id', id)
       .single();
     return data;
