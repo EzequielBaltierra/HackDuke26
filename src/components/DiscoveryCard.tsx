@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { hrefUserProfile } from '../lib/routes';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import {
   FeedBadgeShields,
@@ -43,9 +44,7 @@ export function DiscoveryCard({ discovery, viewerUserId, followingIds, onToggleF
   const authorId = discovery.users?.id;
   const isFollowing = authorId ? followingIds?.has(authorId) : false;
 
-  const goUser = authorId
-    ? () => router.push({ pathname: '/user/[id]/index', params: { id: authorId } })
-    : undefined;
+  const goUser = authorId ? () => router.push(hrefUserProfile(authorId)) : undefined;
 
   return (
     <View

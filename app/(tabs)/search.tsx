@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, SectionList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Icon } from '../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { DiscoveryCard } from '../../src/components/DiscoveryCard';
@@ -9,6 +10,7 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { useDiscoveries } from '../../src/hooks/useDiscoveries';
 import { useExpeditions } from '../../src/hooks/useExpeditions';
 import { useViewerFollowingIds } from '../../src/hooks/useFollows';
+import { hrefUserProfile } from '../../src/lib/routes';
 import { supabase } from '../../src/lib/supabase';
 import { colors } from '../../src/theme/colors';
 import { ff, textStyles } from '../../src/theme/typography';
@@ -53,7 +55,7 @@ function UserResultRow({ user, onPress }: { user: User; onPress: () => void }) {
         <Image source={{ uri: user.profile_photo_url }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }} />
       ) : (
         <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.greenBase, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-          <Text style={{ fontSize: 18 }}>🌿</Text>
+          <Icon name="clover" size={18} color={colors.bgPrimary} />
         </View>
       )}
       <View style={{ flex: 1 }}>
@@ -181,7 +183,7 @@ export default function SearchScreen() {
             <UserResultRow
               key={u.id}
               user={u}
-              onPress={() => router.push({ pathname: '/user/[id]/index', params: { id: u.id } })}
+              onPress={() => router.push(hrefUserProfile(u.id))}
             />
           ))}
         </View>

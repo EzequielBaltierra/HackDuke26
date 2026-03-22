@@ -1,13 +1,14 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useRef, useState } from 'react';
 import {
-  Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View,
+  Alert, Animated, Image, ScrollView, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculateExpeditionPoints, awardPoints, checkAndAwardBadges } from '../../src/lib/points';
 import { supabase } from '../../src/lib/supabase';
+import { LocationPicker } from '../../src/components/LocationPicker';
 import { PointsToast } from '../../src/components/PointsToast';
 import { useAuth } from '../../src/hooks/useAuth';
 import { EXPEDITION_VIBE_TAGS } from '../../src/constants/expeditionVibes';
@@ -27,13 +28,27 @@ function base64ToUint8Array(base64: string): Uint8Array {
 export default function NewExpeditionScreen() {
   const router = useRouter();
   const { currentUser } = useAuth();
-  const [title, setTitle] = useState('');
+  const params = useLocalSearchParams<{
+    originalId?: string;
+    originalTitle?: string;
+    originalLocation?: string;
+    originalType?: string;
+    originalDifficulty?: string;
+    vibes?: string;
+    originalCreatorUsername?: string;
+  }>();
+  const isRedo = Boolean(params.originalId);
+  const [title, setTitle] = useState(params.originalTitle ?? '');
   const [description, setDescription] = useState('');
-  const [type, setType] = useState<ExpeditionType>('hike');
-  const [location, setLocation] = useState('');
+  const [type, setType] = useState<ExpeditionType>((params.originalType as ExpeditionType) ?? 'hike');
+  const [locationName, setLocationName] = useState(params.originalLocation ?? '');
+  const [locationLat, setLocationLat] = useState<number | null>(null);
+  const [locationLng, setLocationLng] = useState<number | null>(null);
   const [distance, setDistance] = useState('');
-  const [difficulty, setDifficulty] = useState<Difficulty>('moderate');
-  const [selectedVibeTags, setSelectedVibeTags] = useState<string[]>([]);
+  const [difficulty, setDifficulty] = useState<Difficulty>((params.originalDifficulty as Difficulty) ?? 'moderate');
+  const [selectedVibeTags, setSelectedVibeTags] = useState<string[]>(
+    params.vibes ? (params.vibes as string).split('|').filter(Boolean) : []
+  );
   const [taggedUsernames, setTaggedUsernames] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [posting, setPosting] = useState(false);
@@ -108,6 +123,10 @@ export default function NewExpeditionScreen() {
       Alert.alert('Missing info', 'Please add a title.');
       return;
     }
+    if (!locationName.trim()) {
+      Alert.alert('Location required', 'Please add a location so others can find this expedition.');
+      return;
+    }
     if (photos.length === 0) {
       Alert.alert('Photo required', 'Please add at least one photo of your expedition.');
       return;
@@ -125,13 +144,17 @@ export default function NewExpeditionScreen() {
         title: title.trim(),
         description: description.trim() || null,
         type,
-        location: location.trim() || null,
+        location: locationName.trim() || null,
+        location_lat: locationLat,
+        location_lng: locationLng,
         distance: distanceKm,
         difficulty,
         vibe_tags: selectedVibeTags,
         photo_urls: photoUrls,
         is_live: false,
         points_earned: totalPoints,
+        original_expedition_id: isRedo ? (params.originalId ?? null) : null,
+        original_creator_username: isRedo ? (params.originalCreatorUsername || null) : null,
       }).select().single();
 
       if (expedition && taggedUsernames.trim()) {
@@ -145,6 +168,10 @@ export default function NewExpeditionScreen() {
             );
           }
         }
+      }
+
+      if (isRedo && params.originalId) {
+        await supabase.rpc('increment_expedition_trip_count', { expedition_id: params.originalId });
       }
 
       await Promise.all([
@@ -163,7 +190,7 @@ export default function NewExpeditionScreen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }}>
+    <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }} keyboardShouldPersistTaps="handled">
       <SafeAreaView style={{ padding: 16 }}>
         {pointsBreakdown ? <PointsToast points={pointsBreakdown} visible={showToast} /> : null}
 
@@ -171,7 +198,7 @@ export default function NewExpeditionScreen() {
           <Text style={{ fontSize: 16, color: '#4e705e', fontWeight: '700' }}>← Cancel</Text>
         </TouchableOpacity>
 
-        <Text style={{ fontSize: 24, fontWeight: '800', color: '#361319', marginBottom: 20 }}>Log Expedition 🥾</Text>
+        <Text style={{ fontSize: 24, fontWeight: '800', color: '#361319', marginBottom: 20 }}>Log Expedition</Text>
 
         {/* Photos — required */}
         <Label>{`Photos * (up to ${MAX_PHOTOS})`}</Label>
@@ -200,7 +227,7 @@ export default function NewExpeditionScreen() {
                   backgroundColor: '#4e705e', justifyContent: 'center', alignItems: 'center',
                 }}
               >
-                <Text style={{ color: '#eaded0', fontSize: 13, fontWeight: '700' }}>📷 Camera</Text>
+                <Text style={{ color: '#eaded0', fontSize: 13, fontWeight: '700' }}>Camera</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={pickPhoto}
@@ -209,15 +236,21 @@ export default function NewExpeditionScreen() {
                   borderWidth: 2, borderColor: '#4e705e', justifyContent: 'center', alignItems: 'center',
                 }}
               >
-                <Text style={{ color: '#4e705e', fontSize: 13, fontWeight: '700' }}>🖼 Library</Text>
+                <Text style={{ color: '#4e705e', fontSize: 13, fontWeight: '700' }}>Library</Text>
               </TouchableOpacity>
             </View>
           ) : null}
         </View>
 
         <Label>Title *</Label>
-        <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Morning hike at Eno River"
-          placeholderTextColor="#c7af94" style={inputStyle} />
+        <TextInput
+          value={title}
+          onChangeText={isRedo ? undefined : setTitle}
+          editable={!isRedo}
+          placeholder="e.g. Morning hike at Eno River"
+          placeholderTextColor="#c7af94"
+          style={[inputStyle, isRedo ? { opacity: 0.6 } : null]}
+        />
 
         <Label>Description</Label>
         <TextInput value={description} onChangeText={setDescription} placeholder="What was it like?"
@@ -226,30 +259,38 @@ export default function NewExpeditionScreen() {
         <Label>Type</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
           {EXPEDITION_TYPES.map(t => (
-            <TouchableOpacity key={t} onPress={() => setType(t)}
+            <SpringPressable key={t} onPress={() => setType(t)}
               style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
                 backgroundColor: type === t ? '#4e705e' : '#c7af94', borderWidth: 1, borderColor: '#c7af94' }}>
               <Text style={{ color: type === t ? '#eaded0' : '#361319', fontWeight: '600', textTransform: 'capitalize' }}>
                 {t.replace('_', ' ')}
               </Text>
-            </TouchableOpacity>
+            </SpringPressable>
           ))}
         </View>
 
         <Label>Difficulty</Label>
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
           {DIFFICULTIES.map(d => (
-            <TouchableOpacity key={d} onPress={() => setDifficulty(d)}
+            <SpringPressable key={d} onPress={() => setDifficulty(d)}
               style={{ flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center',
                 backgroundColor: difficulty === d ? '#4e705e' : '#c7af94' }}>
               <Text style={{ color: difficulty === d ? '#eaded0' : '#361319', fontWeight: '600', textTransform: 'capitalize' }}>{d}</Text>
-            </TouchableOpacity>
+            </SpringPressable>
           ))}
         </View>
 
-        <Label>Location</Label>
-        <TextInput value={location} onChangeText={setLocation} placeholder="e.g. Eno River State Park"
-          placeholderTextColor="#c7af94" style={inputStyle} />
+        <Label>Location *</Label>
+        <LocationPicker
+          locationName={locationName}
+          lat={locationLat}
+          lng={locationLng}
+          onChange={(name, lat, lng) => {
+            setLocationName(name);
+            setLocationLat(lat);
+            setLocationLng(lng);
+          }}
+        />
 
         <Label>Distance (miles)</Label>
         <TextInput value={distance} onChangeText={setDistance} placeholder="e.g. 3.1"
@@ -258,12 +299,12 @@ export default function NewExpeditionScreen() {
         <Label>Vibes</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
           {EXPEDITION_VIBE_TAGS.map(tag => (
-            <TouchableOpacity key={tag} onPress={() => toggleVibeTag(tag)}
+            <SpringPressable key={tag} onPress={() => toggleVibeTag(tag)}
               style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
                 backgroundColor: selectedVibeTags.includes(tag) ? '#4e705e' : '#eaded0',
                 borderWidth: 1, borderColor: '#c7af94' }}>
               <Text style={{ color: selectedVibeTags.includes(tag) ? '#eaded0' : '#361319', fontSize: 13 }}>{tag}</Text>
-            </TouchableOpacity>
+            </SpringPressable>
           ))}
         </View>
 
@@ -283,7 +324,7 @@ export default function NewExpeditionScreen() {
           style={{ backgroundColor: posting ? '#c7af94' : '#4e705e', padding: 18, borderRadius: 16, alignItems: 'center', marginBottom: 40 }}
         >
           <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>
-            {posting ? 'Uploading...' : 'Post Expedition ✨'}
+            {posting ? 'Uploading...' : 'Post Expedition'}
           </Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -304,4 +345,22 @@ const inputStyle = {
 
 function Label({ children }: { children: string }) {
   return <Text style={{ fontSize: 12, fontWeight: '700', color: '#6d3a3c', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{children}</Text>;
+}
+
+function SpringPressable({ onPress, style, children }: { onPress: () => void; style?: object; children: React.ReactNode }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  function handlePress() {
+    Animated.sequence([
+      Animated.spring(scale, { toValue: 0.88, useNativeDriver: true, speed: 60, bounciness: 0 }),
+      Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 14 }),
+    ]).start();
+    onPress();
+  }
+  return (
+    <TouchableOpacity onPress={handlePress} activeOpacity={1}>
+      <Animated.View style={[style, { transform: [{ scale }] }]}>
+        {children}
+      </Animated.View>
+    </TouchableOpacity>
+  );
 }

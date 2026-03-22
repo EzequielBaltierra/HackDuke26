@@ -47,6 +47,8 @@ export type Expedition = {
   description: string | null;
   type: ExpeditionType;
   location: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
   distance: number | null;
   difficulty: Difficulty | null;
   vibe_tags: string[];
@@ -60,6 +62,13 @@ export type Expedition = {
   users?: User;
   discoveries?: Discovery[];
   participants?: User[];
+  original_expedition_id: string | null;
+  trip_count: number;
+  original_creator_username: string | null;
+  original_expedition?: {
+    id: string;
+    trip_count: number;
+  } | null;
 };
 
 export type Badge = {
@@ -75,6 +84,8 @@ export type AIIdentificationResult = {
   category: Discovery['category'];
   confidence: number;
   is_rare: boolean;
+  is_nature: boolean;
+  rejection_reason: string | null;
   fact_card: FactCard;
 };
 

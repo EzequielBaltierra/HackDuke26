@@ -40,6 +40,8 @@ create table if not exists expeditions (
   description text,
   type text not null,
   location text,
+  location_lat numeric(10,6),
+  location_lng numeric(10,6),
   distance numeric(8,2),
   difficulty text,
   vibe_tags text[] default '{}' not null,

@@ -7,10 +7,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Icon } from '../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { fetchLeaderboard } from '../../src/hooks/useProfile';
+import { hrefUserProfile } from '../../src/lib/routes';
 import { useAuth } from '../../src/hooks/useAuth';
+import { getRank } from '../../src/lib/points';
 import { colors } from '../../src/theme/colors';
 import { ff, textStyles } from '../../src/theme/typography';
 import { User } from '../../src/types';
@@ -155,7 +158,7 @@ export default function LeaderboardScreen() {
                 borderColor: colors.bgPrimary,
               }}
             >
-              <Text style={{ fontSize: 22 }}>🌿</Text>
+              <Icon name="clover" size={22} color={colors.bgPrimary} />
             </View>
           )}
           <View style={{ flex: 1, minWidth: 0 }}>
@@ -164,9 +167,18 @@ export default function LeaderboardScreen() {
             </Text>
             <Text style={{ fontFamily: ff.crimson, fontSize: 15, color: colors.bgPrimary, marginTop: 2, opacity: 0.95 }}>
               {currentUser.total_points.toLocaleString()} pts
-              {myRank != null ? ` · Rank #${myRank}` : ''}
+              {myRank != null ? ` · #${myRank}` : ''}
             </Text>
           </View>
+          {(() => {
+            const r = getRank(currentUser.total_points);
+            return (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: r.color, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4, marginLeft: 8 }}>
+                <Icon name={r.iconName as any} size={13} color="#eaded0" />
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#eaded0' }}>{r.name}</Text>
+              </View>
+            );
+          })()}
         </View>
       ) : null}
 
@@ -192,10 +204,11 @@ export default function LeaderboardScreen() {
         renderItem={({ item, index }) => {
           const rank = index + 1;
           const isMe = item.id === currentUser?.id;
+          const tierRank = getRank(item.total_points);
           return (
             <TouchableOpacity
               activeOpacity={0.75}
-              onPress={() => router.push({ pathname: '/user/[id]/index', params: { id: item.id } })}
+              onPress={() => router.push(hrefUserProfile(item.id))}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -232,7 +245,7 @@ export default function LeaderboardScreen() {
                     borderColor: colors.greenAccent,
                   }}
                 >
-                  <Text style={{ fontSize: 22 }}>🌿</Text>
+                  <Icon name="clover" size={22} color={colors.bgPrimary} />
                 </View>
               )}
               <View style={{ flex: 1, minWidth: 0 }}>
@@ -245,11 +258,18 @@ export default function LeaderboardScreen() {
                 >
                   @{item.username}
                 </Text>
-                {item.streak > 0 ? (
-                  <Text style={[textStyles.postDescription, { fontSize: 13, marginTop: 2, opacity: 0.8 }]}>
-                    {item.streak} day streak
-                  </Text>
-                ) : null}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: tierRank.color, borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 }}>
+                    <Icon name={tierRank.iconName as any} size={11} color="#eaded0" />
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#eaded0' }}>{tierRank.name}</Text>
+                  </View>
+                  {item.streak > 0 ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Icon name="campfire" size={12} color="#6d3a3c" />
+                      <Text style={[textStyles.postDescription, { fontSize: 12, opacity: 0.8 }]}>{item.streak}d</Text>
+                    </View>
+                  ) : null}
+                </View>
               </View>
               <View style={{ minWidth: POINTS_MIN_WIDTH, alignItems: 'flex-end' }}>
                 <Text style={{ fontFamily: ff.crimsonBold, fontSize: 17, color: colors.greenAccent }}>
