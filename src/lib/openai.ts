@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { AIIdentificationResult } from '../types';
 
 const openai = new OpenAI({
