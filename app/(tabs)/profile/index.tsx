@@ -11,6 +11,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { fetchUserProfile } from '../../../src/hooks/useProfile';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { supabase } from '../../../src/lib/supabase';
+import { getRank } from '../../../src/lib/points';
 import { colors as themeColors } from '../../../src/theme/colors';
 import { Badge, Discovery, Expedition, User } from '../../../src/types';
 
@@ -133,6 +134,7 @@ export default function ProfileScreen() {
   }
 
   const { user, badges, discoveries, expeditions, followerCount, followingCount } = profile;
+  const rank = getRank(user.total_points);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }}>
@@ -155,6 +157,29 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <Text style={{ fontSize: 22, fontWeight: '800', color: '#361319' }}>@{user.username}</Text>
+
+          {/* Rank badge */}
+          <View style={{ alignItems: 'center', marginTop: 10, marginBottom: 4 }}>
+            <View style={{
+              flexDirection: 'row', alignItems: 'center', gap: 6,
+              backgroundColor: rank.color, borderRadius: 20,
+              paddingHorizontal: 14, paddingVertical: 5, marginBottom: 8,
+            }}>
+              <Text style={{ fontSize: 16 }}>{rank.emoji}</Text>
+              <Text style={{ fontSize: 15, fontWeight: '800', color: '#eaded0', letterSpacing: 0.5 }}>{rank.name}</Text>
+            </View>
+            {/* Progress bar */}
+            <View style={{ width: 180, height: 6, backgroundColor: '#c7af94', borderRadius: 3, overflow: 'hidden' }}>
+              <View style={{ width: `${Math.round(rank.progress * 100)}%`, height: 6, backgroundColor: rank.color, borderRadius: 3 }} />
+            </View>
+            {rank.nextMinPoints ? (
+              <Text style={{ fontSize: 11, color: '#6d3a3c', marginTop: 4 }}>
+                {user.total_points.toLocaleString()} / {rank.nextMinPoints.toLocaleString()} pts to next rank
+              </Text>
+            ) : (
+              <Text style={{ fontSize: 11, color: '#6d3a3c', marginTop: 4 }}>Maximum rank achieved 🌍</Text>
+            )}
+          </View>
 
           {editingBio ? (
             <View style={{ width: '100%', marginTop: 8 }}>

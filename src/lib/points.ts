@@ -222,6 +222,35 @@ const BADGE_RULES: { type: string; check: (userId: string) => Promise<boolean> }
   },
 ];
 
+export type Rank = {
+  name: string;
+  emoji: string;
+  minPoints: number;
+  nextMinPoints: number | null;
+  color: string;
+};
+
+const RANKS: Rank[] = [
+  { name: 'Seed',       emoji: '🌱', minPoints: 0,      nextMinPoints: 100,   color: '#c7af94' },
+  { name: 'Sprout',     emoji: '🌿', minPoints: 100,    nextMinPoints: 300,   color: '#7aab8a' },
+  { name: 'Sapling',    emoji: '🪴', minPoints: 300,    nextMinPoints: 600,   color: '#4e705e' },
+  { name: 'Wildflower', emoji: '🌸', minPoints: 600,    nextMinPoints: 1000,  color: '#b56fa0' },
+  { name: 'Fern',       emoji: '🍃', minPoints: 1000,   nextMinPoints: 2000,  color: '#3d8c5e' },
+  { name: 'Understory', emoji: '🌲', minPoints: 2000,   nextMinPoints: 4000,  color: '#2d6a4f' },
+  { name: 'Grove',      emoji: '🌳', minPoints: 4000,   nextMinPoints: 7500,  color: '#1b4332' },
+  { name: 'Canopy',     emoji: '🦅', minPoints: 7500,   nextMinPoints: 15000, color: '#5c4033' },
+  { name: 'Old Growth', emoji: '🌲', minPoints: 15000,  nextMinPoints: 30000, color: '#361319' },
+  { name: 'Biome',      emoji: '🌍', minPoints: 30000,  nextMinPoints: null,  color: '#0d1b2a' },
+];
+
+export function getRank(totalPoints: number): Rank & { progress: number } {
+  const rank = [...RANKS].reverse().find(r => totalPoints >= r.minPoints) ?? RANKS[0];
+  const progress = rank.nextMinPoints
+    ? (totalPoints - rank.minPoints) / (rank.nextMinPoints - rank.minPoints)
+    : 1;
+  return { ...rank, progress: Math.min(progress, 1) };
+}
+
 export async function checkAndAwardBadges(userId: string): Promise<string[]> {
   const { data: existing } = await supabase.from('badges').select('badge_type').eq('user_id', userId);
   const existingTypes = new Set((existing ?? []).map(b => b.badge_type));
