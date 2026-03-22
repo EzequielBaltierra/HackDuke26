@@ -14,7 +14,7 @@ export function useExpeditions(userId?: string) {
     setLoading(true);
     let query = supabase
       .from('expeditions')
-      .select('*, users!expeditions_user_id_fkey(id, username, profile_photo_url, total_points), original_expedition:expeditions!expeditions_original_expedition_id_fkey(id, trip_count)')
+      .select('*, users!expeditions_user_id_fkey(id, username, profile_photo_url, total_points)')
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -29,7 +29,7 @@ export function useExpeditions(userId?: string) {
   async function fetchById(id: string): Promise<Expedition | null> {
     const { data } = await supabase
       .from('expeditions')
-      .select('*, users!expeditions_user_id_fkey(id, username, profile_photo_url, total_points), original_expedition:expeditions!expeditions_original_expedition_id_fkey(id, trip_count)')
+      .select('*, users!expeditions_user_id_fkey(id, username, profile_photo_url, total_points)')
       .eq('id', id)
       .single();
     return data;

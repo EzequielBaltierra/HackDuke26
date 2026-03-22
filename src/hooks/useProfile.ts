@@ -6,7 +6,7 @@ export async function fetchUserProfile(userId: string) {
     supabase.from('users').select('*').eq('id', userId).single(),
     supabase.from('badges').select('*').eq('user_id', userId).order('earned_at', { ascending: false }),
     supabase.from('discoveries').select('id, image_url, common_name, points_earned, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
-    supabase.from('expeditions').select('*, users!expeditions_user_id_fkey(id, username, profile_photo_url, total_points), original_expedition:expeditions!expeditions_original_expedition_id_fkey(id, trip_count)').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
+    supabase.from('expeditions').select('*, users!expeditions_user_id_fkey(id, username, profile_photo_url, total_points)').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
   ]);
 
   return {

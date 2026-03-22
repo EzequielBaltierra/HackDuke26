@@ -24,7 +24,7 @@ export function ExpeditionCard({ expedition }: Props) {
   const distanceStr = formatDistanceMiles(expedition.distance);
   const durationStr = formatElapsed(expedition.duration_seconds);
   const locationLine = formatLocationCommaDate(expedition.location, expedition.created_at);
-  const displayTripCount = expedition.original_expedition?.trip_count ?? expedition.trip_count ?? 1;
+  const displayTripCount = expedition.trip_count ?? 1;
 
   const showFooter = Boolean(distanceStr || durationStr || expedition.points_earned > 0);
 
