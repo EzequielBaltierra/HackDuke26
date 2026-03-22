@@ -8,6 +8,9 @@ export const ff = {
   crimsonBold: 'CrimsonText_700Bold',
 } as const;
 
+/** @deprecated Use `ff` — kept for login, FactCard, leaderboard, etc. */
+export const fontFamily = ff;
+
 export const textStyles = {
   titleHeaderAccent: {
     fontFamily: ff.faustinaSemi,
@@ -55,5 +58,56 @@ export const textStyles = {
     fontFamily: ff.crimson,
     fontSize: 19,
     color: colors.greenBase,
+  } as TextStyle,
+} as const;
+
+/** Semantic groups for screens that predate `textStyles` naming */
+export const type = {
+  titleHeaderAccent: textStyles.titleHeaderAccent,
+  postTitle: textStyles.postTitle,
+  postDescription: textStyles.postDescription,
+  quickFacts: {
+    fontFamily: ff.crimsonBold,
+    fontSize: 48,
+    color: colors.redAccent,
+  } as TextStyle,
+} as const;
+
+/** Optional feed-card presets (re-export for `src/theme/index`) */
+export const typeCard = {
+  discoveryTitle: {
+    fontFamily: ff.crimsonBold,
+    fontSize: 24,
+    color: colors.redAccent,
+  } as TextStyle,
+  discoveryCaption: {
+    fontFamily: ff.crimson,
+    fontSize: 16,
+    lineHeight: 22,
+    color: colors.textPrimary,
+  } as TextStyle,
+  expeditionTitle: {
+    fontFamily: ff.crimsonBold,
+    fontSize: 22,
+    color: colors.redAccent,
+  } as TextStyle,
+  expeditionDescription: {
+    fontFamily: ff.crimson,
+    fontSize: 16,
+    lineHeight: 22,
+    color: colors.textPrimary,
+  } as TextStyle,
+  userRowName: textStyles.userName,
+  userRowPoints: textStyles.userPoints,
+  meta: {
+    fontFamily: ff.crimson,
+    fontSize: 13,
+    color: colors.redBase,
+    opacity: 0.85,
+  } as TextStyle,
+  vibeChip: {
+    fontFamily: ff.crimsonBold,
+    fontSize: 13,
+    color: colors.textMuted,
   } as TextStyle,
 } as const;

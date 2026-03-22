@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { hrefUserProfile } from '../lib/routes';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import {
   FeedBadgeShields,
@@ -11,7 +12,12 @@ import { colors } from '../theme/colors';
 import { textStyles } from '../theme/typography';
 import { Discovery } from '../types';
 
-type Props = { discovery: Discovery };
+type Props = {
+  discovery: Discovery;
+  viewerUserId?: string;
+  followingIds?: Set<string>;
+  onToggleFollow?: (authorUserId: string) => void;
+};
 
 const categoryLabel: Record<string, string> = {
   plants: 'Plants',
@@ -32,9 +38,13 @@ function discoveryLocationLine(d: Discovery) {
   return formatLocationCommaDate(null, d.created_at);
 }
 
-export function DiscoveryCard({ discovery }: Props) {
+export function DiscoveryCard({ discovery, viewerUserId, followingIds, onToggleFollow }: Props) {
   const router = useRouter();
   const openDetail = () => router.push(`/discovery/${discovery.id}`);
+  const authorId = discovery.users?.id;
+  const isFollowing = authorId ? followingIds?.has(authorId) : false;
+
+  const goUser = authorId ? () => router.push(hrefUserProfile(authorId)) : undefined;
 
   return (
     <View
@@ -52,22 +62,24 @@ export function DiscoveryCard({ discovery }: Props) {
         elevation: 3,
       }}
     >
-      <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
-        <View style={{ padding: 16, paddingBottom: 10 }}>
-          <FeedUserRow user={discovery.users} />
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}>
+        <FeedUserRow
+          user={discovery.users}
+          viewerUserId={viewerUserId}
+          isFollowing={isFollowing}
+          onToggleFollow={
+            authorId && onToggleFollow ? () => onToggleFollow(authorId) : undefined
+          }
+          onPressUser={goUser}
+        />
+      </View>
 
+      <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
+        <View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
           <Text style={[textStyles.postTitle, { marginBottom: 4 }]}>{discovery.common_name}</Text>
 
           {discovery.scientific_name ? (
-            <Text
-              style={{
-                fontFamily: textStyles.postDescription.fontFamily,
-                fontSize: 15,
-                color: colors.redBase,
-                fontStyle: 'italic',
-                marginBottom: 6,
-              }}
-            >
+            <Text style={{ fontFamily: textStyles.postDescription.fontFamily, fontSize: 15, color: colors.redBase, fontStyle: 'italic', marginBottom: 6 }}>
               {discovery.scientific_name}
             </Text>
           ) : null}
@@ -75,16 +87,7 @@ export function DiscoveryCard({ discovery }: Props) {
           <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{discoveryLocationLine(discovery)}</Text>
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-            <View
-              style={{
-                borderRadius: 20,
-                paddingHorizontal: 12,
-                paddingVertical: 5,
-                backgroundColor: colors.bgAccent,
-                borderWidth: 1,
-                borderColor: colors.redBase,
-              }}
-            >
+            <View style={{ borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: colors.bgAccent, borderWidth: 1, borderColor: colors.redBase }}>
               <Text style={textStyles.vibeTag}>{categoryLabel[discovery.category] ?? discovery.category}</Text>
             </View>
           </View>

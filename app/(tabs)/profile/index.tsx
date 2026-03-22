@@ -1,41 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator, Alert, Image, ScrollView, Text,
   TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
-import { fetchUserProfile } from '../../src/hooks/useProfile';
-import { useAuth } from '../../src/hooks/useAuth';
-import { supabase } from '../../src/lib/supabase';
-import { Badge, Discovery, Expedition, User } from '../../src/types';
+import { fetchUserProfile } from '../../../src/hooks/useProfile';
+import { useAuth } from '../../../src/hooks/useAuth';
+import { supabase } from '../../../src/lib/supabase';
+import { colors as themeColors } from '../../../src/theme/colors';
+import { Badge, Discovery, Expedition, User } from '../../../src/types';
 
 const BADGE_LABELS: Record<string, string> = {
-  // Existing
   first_discovery: '🌿 First Discovery',
   trailblazer: '🥾 Trailblazer',
   explorer: '⛰ Explorer',
   rare_finder: '🌟 Rare Finder',
-  // Discovery-based
   botanist: '🌿 Botanist',
   entomologist: '🦋 Entomologist',
   fungi_hunter: '🍄 Fungi Hunter',
   collector: '📚 Collector',
   naturalist: '🌎 Naturalist',
-  // Expedition-based
   summit_seeker: '🏔️ Summit Seeker',
   long_hauler: '🚶 Long Hauler',
   weekend_warrior: '🌅 Weekend Warrior',
   trailhead: '🗺️ Trailhead',
-  // Social
   social_explorer: '👥 Social Explorer',
   trail_buddy: '🤝 Trail Buddy',
-  // Streaks
   on_a_roll: '🔥 On a Roll',
   unstoppable: '⚡ Unstoppable',
-  // Fun
   night_owl: '🌙 Night Owl',
 };
 
@@ -44,6 +40,8 @@ type Profile = {
   badges: Badge[];
   discoveries: Partial<Discovery>[];
   expeditions: Partial<Expedition>[];
+  followerCount: number;
+  followingCount: number;
 };
 
 export default function ProfileScreen() {
@@ -54,7 +52,7 @@ export default function ProfileScreen() {
   const [bioText, setBioText] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  useEffect(() => {
+  const reload = useCallback(() => {
     if (currentUser) {
       fetchUserProfile(currentUser.id).then(data => {
         setProfile(data);
@@ -62,6 +60,12 @@ export default function ProfileScreen() {
       });
     }
   }, [currentUser]);
+
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload]),
+  );
 
   function handleSignOut() {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -128,12 +132,11 @@ export default function ProfileScreen() {
     );
   }
 
-  const { user, badges, discoveries, expeditions } = profile;
+  const { user, badges, discoveries, expeditions, followerCount, followingCount } = profile;
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }}>
       <SafeAreaView>
-        {/* Header */}
         <View style={{ padding: 24, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#c7af94' }}>
           <TouchableOpacity onPress={handlePickPhoto} disabled={uploadingPhoto} style={{ marginBottom: 12 }}>
             {user.profile_photo_url ? (
@@ -186,16 +189,32 @@ export default function ProfileScreen() {
               )}
             </TouchableOpacity>
           )}
+
+          {!editingBio ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 10, paddingHorizontal: 8 }}>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/profile/followers')} activeOpacity={0.7}>
+                <Text style={{ fontSize: 15, textAlign: 'center' }}>
+                  <Text style={{ fontWeight: '800', color: themeColors.redAccent }}>{followerCount}</Text>
+                  <Text style={{ fontWeight: '400', color: themeColors.redBase }}> Followers</Text>
+                </Text>
+              </TouchableOpacity>
+              <Text style={{ fontSize: 15, color: themeColors.redBase, marginHorizontal: 6 }}>|</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/profile/following')} activeOpacity={0.7}>
+                <Text style={{ fontSize: 15, textAlign: 'center' }}>
+                  <Text style={{ fontWeight: '800', color: themeColors.redAccent }}>{followingCount}</Text>
+                  <Text style={{ fontWeight: '400', color: themeColors.redBase }}> Following</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </View>
 
-        {/* Stats */}
         <View style={{ flexDirection: 'row', margin: 16, gap: 12 }}>
           <StatCard label="Points" value={user.total_points.toLocaleString()} emoji="⭐" />
           <StatCard label="Streak" value={`${user.streak}d`} emoji="🔥" />
           <StatCard label="Spots" value={discoveries.length.toString()} emoji="🔍" />
         </View>
 
-        {/* Badges */}
         {badges.length > 0 ? (
           <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
             <Text style={{ fontSize: 16, fontWeight: '700', color: '#361319', marginBottom: 10 }}>Badges</Text>
@@ -211,7 +230,6 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
-        {/* Discovery grid */}
         {discoveries.length > 0 ? (
           <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
             <Text style={{ fontSize: 16, fontWeight: '700', color: '#361319', marginBottom: 10 }}>Discoveries</Text>
@@ -227,7 +245,6 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
-        {/* Expeditions list */}
         {expeditions.length > 0 ? (
           <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
             <Text style={{ fontSize: 16, fontWeight: '700', color: '#361319', marginBottom: 10 }}>Expeditions</Text>

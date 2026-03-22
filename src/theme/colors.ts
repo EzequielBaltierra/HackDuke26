@@ -1,5 +1,5 @@
 /** docs/STYLE_GUIDE.md — Color Palette */
-export const colors = {
+const palette = {
   bgPrimary: '#EADED0',
   bgAccent: '#C7AF94',
   greenBase: '#4E705E',
@@ -12,4 +12,13 @@ export const colors = {
   tabIconActive: '#EADED0',
   tabIconInactive: '#C7AF94',
   surface: '#FFFFFF',
+} as const;
+
+/** Canonical tokens + short aliases (`bg`, `green`, `text`, `red`) for legacy screens */
+export const colors = {
+  ...palette,
+  bg: palette.bgPrimary,
+  green: palette.greenBase,
+  text: palette.textPrimary,
+  red: palette.redBase,
 } as const;

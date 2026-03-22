@@ -1,12 +1,14 @@
 import { supabase } from '../lib/supabase';
 import { User, Badge, Discovery, Expedition } from '../types';
+import { fetchFollowCounts } from './useFollows';
 
 export async function fetchUserProfile(userId: string) {
-  const [userRes, badgesRes, discoveriesRes, expeditionsRes] = await Promise.all([
+  const [userRes, badgesRes, discoveriesRes, expeditionsRes, counts] = await Promise.all([
     supabase.from('users').select('*').eq('id', userId).single(),
     supabase.from('badges').select('*').eq('user_id', userId).order('earned_at', { ascending: false }),
     supabase.from('discoveries').select('id, image_url, common_name, points_earned, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
     supabase.from('expeditions').select('id, title, type, points_earned, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
+    fetchFollowCounts(userId),
   ]);
 
   return {
@@ -14,6 +16,8 @@ export async function fetchUserProfile(userId: string) {
     badges: (badgesRes.data ?? []) as Badge[],
     discoveries: (discoveriesRes.data ?? []) as Partial<Discovery>[],
     expeditions: (expeditionsRes.data ?? []) as Partial<Expedition>[],
+    followerCount: counts.followerCount,
+    followingCount: counts.followingCount,
   };
 }
 

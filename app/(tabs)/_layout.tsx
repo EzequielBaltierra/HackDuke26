@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { View } from 'react-native';
+import { Dimensions, View } from 'react-native';
 import { TabBarIcon } from '../../src/components/icons/TabBarIcon';
 import { colors } from '../../src/theme/colors';
 
@@ -24,19 +24,24 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         tabBarStyle: {
+          width: Dimensions.get('window').width,
+          alignSelf: 'stretch',
           backgroundColor: colors.greenBase,
-          borderTopWidth: 2,
-          borderTopColor: colors.greenAccent,
+          borderTopWidth: 0,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
           height: 68,
           paddingBottom: 10,
           paddingTop: 8,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
+          elevation: 0,
+          shadowOpacity: 0,
+          shadowOffset: { width: 0, height: 0 },
         },
         tabBarShowLabel: false,
         headerShown: false,
         tabBarActiveTintColor: colors.tabIconActive,
         tabBarInactiveTintColor: colors.tabIconInactive,
+        tabBarBackground: () => <View style={{ flex: 1, backgroundColor: colors.greenBase }} />,
       }}
     >
       <Tabs.Screen

@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { hrefUserProfile } from '../lib/routes';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import {
   FeedBadgeShields,
@@ -12,12 +13,19 @@ import { colors } from '../theme/colors';
 import { textStyles } from '../theme/typography';
 import { Expedition } from '../types';
 
-type Props = { expedition: Expedition };
+type Props = {
+  expedition: Expedition;
+  viewerUserId?: string;
+  followingIds?: Set<string>;
+  onToggleFollow?: (authorUserId: string) => void;
+};
 
-export function ExpeditionCard({ expedition }: Props) {
+export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggleFollow }: Props) {
   const router = useRouter();
   const [photoIndex, setPhotoIndex] = useState(0);
   const photos = expedition.photo_urls ?? [];
+  const authorId = expedition.users?.id;
+  const isFollowing = authorId ? followingIds?.has(authorId) : false;
 
   const distanceStr = formatDistanceMiles(expedition.distance);
   const durationStr = formatElapsed(expedition.duration_seconds);
@@ -26,6 +34,8 @@ export function ExpeditionCard({ expedition }: Props) {
   const openDetail = () => router.push(`/expedition/${expedition.id}`);
 
   const showFooter = Boolean(distanceStr || durationStr || expedition.points_earned > 0);
+
+  const goUser = authorId ? () => router.push(hrefUserProfile(authorId)) : undefined;
 
   return (
     <View
@@ -43,10 +53,20 @@ export function ExpeditionCard({ expedition }: Props) {
         elevation: 3,
       }}
     >
-      <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
-        <View style={{ padding: 16, paddingBottom: 10 }}>
-          <FeedUserRow user={expedition.users} />
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }}>
+        <FeedUserRow
+          user={expedition.users}
+          viewerUserId={viewerUserId}
+          isFollowing={isFollowing}
+          onToggleFollow={
+            authorId && onToggleFollow ? () => onToggleFollow(authorId) : undefined
+          }
+          onPressUser={goUser}
+        />
+      </View>
 
+      <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
+        <View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
           <Text style={[textStyles.postTitle, { marginBottom: 6 }]}>{expedition.title}</Text>
 
           <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{locationLine}</Text>
@@ -54,17 +74,7 @@ export function ExpeditionCard({ expedition }: Props) {
           {expedition.vibe_tags?.length > 0 ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
               {expedition.vibe_tags.slice(0, 6).map(tag => (
-                <View
-                  key={tag}
-                  style={{
-                    borderRadius: 20,
-                    paddingHorizontal: 12,
-                    paddingVertical: 5,
-                    backgroundColor: colors.bgAccent,
-                    borderWidth: 1,
-                    borderColor: colors.redBase,
-                  }}
-                >
+                <View key={tag} style={{ borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: colors.bgAccent, borderWidth: 1, borderColor: colors.redBase }}>
                   <Text style={textStyles.vibeTag}>{tag}</Text>
                 </View>
               ))}
