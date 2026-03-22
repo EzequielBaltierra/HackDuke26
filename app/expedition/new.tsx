@@ -85,8 +85,9 @@ export default function NewExpeditionScreen() {
       setPointsBreakdown(breakdown);
       setShowToast(true);
       setTimeout(() => router.replace('/(tabs)'), 2000);
-    } catch {
-      Alert.alert('Error', 'Could not post expedition. Try again.');
+    } catch (err: any) {
+      console.error('[postExpedition]', err);
+      Alert.alert('Error', err?.message ?? 'Could not post expedition. Try again.');
       setPosting(false);
     }
   }
