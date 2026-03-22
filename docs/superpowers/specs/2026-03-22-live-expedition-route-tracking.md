@@ -39,7 +39,7 @@ startLng: number | null;
 routeWaypoints: { lat: number; lng: number }[];
 ```
 
-Initialize `startLat: null`, `startLng: null`, `routeWaypoints: []` in `setLiveExpeditionDraft`.
+The three new fields are initialized at the call site in `setup.tsx`'s `start()` function.
 
 ---
 
@@ -50,6 +50,36 @@ Initialize `startLat: null`, `startLng: null`, `routeWaypoints: []` in `setLiveE
 **When GPS is OFF:** Show a plain `TextInput` for the location label (same as today). This is the fallback for users with poor signal. The draft `locationLabel` is set from this input as before.
 
 The vibes selection is unchanged.
+
+**Updated `start()` function:** Remove the `!loc` guard when GPS is on, and always initialize the three new fields in the draft:
+
+```ts
+function start() {
+  if (!gpsEnabled) {
+    const loc = locationLabel.trim() || search.trim();
+    if (!loc) {
+      Alert.alert('Location needed', 'Enter a location for your hike.');
+      return;
+    }
+  }
+  clearLiveExpeditionDraft();
+  setLiveExpeditionDraft({
+    locationLabel: gpsEnabled ? '' : (locationLabel.trim() || search.trim()),
+    vibeTags: vibes,
+    gpsEnabled,
+    durationSeconds: 0,
+    startTimeIso: '',
+    endTimeIso: '',
+    distanceMiles: 0,
+    photoUris: [],
+    photoInsights: [],
+    startLat: null,
+    startLng: null,
+    routeWaypoints: [],
+  });
+  router.push('/expedition/live');
+}
+```
 
 ---
 
@@ -90,10 +120,10 @@ New ref: `const startCapturedRef = useRef(false);`
 
 ### Waypoint recording (every fix)
 
-A second ref tracks the last recorded waypoint position:
+Two new refs. `lastWaypointCoordsRef` stores the full `coords` object so it can be passed directly to `haversineMeters` without an adapter:
 
 ```ts
-const lastWaypointRef = useRef<{ lat: number; lng: number } | null>(null);
+const lastWaypointCoordsRef = useRef<Location.LocationObject['coords'] | null>(null);
 const waypointsRef = useRef<{ lat: number; lng: number }[]>([]);
 ```
 
@@ -101,18 +131,15 @@ Inside the `watchPositionAsync` callback, after distance accumulation:
 
 ```ts
 const waypoint = { lat: loc.coords.latitude, lng: loc.coords.longitude };
-if (!lastWaypointRef.current) {
+if (!lastWaypointCoordsRef.current) {
   // Always record the first fix as the first waypoint
   waypointsRef.current.push(waypoint);
-  lastWaypointRef.current = waypoint;
+  lastWaypointCoordsRef.current = loc.coords;
 } else {
-  const distFromLastWaypoint = haversineMeters(
-    { latitude: lastWaypointRef.current.lat, longitude: lastWaypointRef.current.lng, altitude: null, accuracy: null, altitudeAccuracy: null, heading: null, speed: null },
-    loc.coords
-  );
+  const distFromLastWaypoint = haversineMeters(lastWaypointCoordsRef.current, loc.coords);
   if (distFromLastWaypoint >= 25) {
     waypointsRef.current.push(waypoint);
-    lastWaypointRef.current = waypoint;
+    lastWaypointCoordsRef.current = loc.coords;
   }
 }
 ```
@@ -153,6 +180,7 @@ Add a new `openRouteInMaps` function alongside the existing `openInMaps`:
 
 ```ts
 export function openRouteInMaps(waypoints: { lat: number; lng: number }[], name: string) {
+  if (waypoints.length === 0) return;
   if (waypoints.length < 2) {
     // Fallback to single-pin if somehow called with < 2 points
     openInMaps(name, waypoints[0].lat, waypoints[0].lng);
@@ -189,7 +217,7 @@ function decimateWaypoints(
   const result: { lat: number; lng: number }[] = [];
   const step = (waypoints.length - 1) / (maxPoints - 1);
   for (let i = 0; i < maxPoints; i++) {
-    result.push(waypoints[Math.round(i * step)]);
+    result.push(waypoints[Math.min(Math.round(i * step), waypoints.length - 1)]);
   }
   return result;
 }
@@ -207,13 +235,13 @@ const hasCoords = expedition.location_lat != null && expedition.location_lng != 
 const isTappable = hasRoute || hasCoords;
 ```
 
-In the `onPress` handler:
+In the `onPress` handler (use `expedition.location ?? expedition.title` as the name — not `locationLine` which appends a date string):
 ```ts
 onPress={() => {
   if (hasRoute) {
-    openRouteInMaps(expedition.route_waypoints!, expedition.location ?? locationLine);
+    openRouteInMaps(expedition.route_waypoints!, expedition.location ?? expedition.title);
   } else {
-    openInMaps(expedition.location ?? locationLine, expedition.location_lat!, expedition.location_lng!);
+    openInMaps(expedition.location ?? expedition.title, expedition.location_lat!, expedition.location_lng!);
   }
 }}
 ```
@@ -225,9 +253,10 @@ Import `openRouteInMaps` from `../lib/mapLink`.
 ## Error Handling
 
 - **GPS permission denied during live expedition**: existing behavior — falls back to manual distance, no start location captured, no waypoints. Location remains whatever was typed in setup.
-- **Nominatim reverse geocode fails**: fallback label `"lat, lng"` string. Draft still has `startLat`/`startLng` for the map link.
+- **Nominatim reverse geocode fails**: fallback label `"lat, lng"` string. Draft still has `startLat`/`startLng` for the map link. Note: the `.catch()` branch calls `updateLiveExpeditionDraft`, which is a silent no-op if the draft was already cleared (e.g., user navigated away before the fetch resolved) — this is safe.
 - **Route has < 2 waypoints** (GPS disabled or very short trip): `route_waypoints` saved as `null`. Card falls back to single-pin behavior using `location_lat`/`location_lng`.
 - **`openRouteInMaps` URL fails**: catches and falls back to single-pin `openInMaps` for the start point.
+- **Supabase insert fails with column-not-found**: the `route_waypoints` column migration has not been applied. Apply the migration in the Supabase SQL editor before deploying this feature (see DB Migration section above).
 
 ---
 
