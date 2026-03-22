@@ -4,7 +4,7 @@ import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator, Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View,
+  ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { identifySpecies } from '../../src/lib/openai';
@@ -177,7 +177,8 @@ export default function NewDiscoveryScreen() {
 
   if (step === 'review' && result) {
     return (
-      <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }} keyboardShouldPersistTaps="handled">
         <SafeAreaView>
           {imageUri ? <Image source={{ uri: imageUri }} style={{ width: '100%', height: 260 }} resizeMode="cover" /> : null}
           <FactCard
@@ -214,6 +215,7 @@ export default function NewDiscoveryScreen() {
           </View>
         </SafeAreaView>
       </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 

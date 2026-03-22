@@ -6,7 +6,9 @@
     "scheme": "com.root.app",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.root.app"
@@ -25,7 +27,9 @@
         {
           "locationWhenInUsePermission": "Root uses your location to tag discoveries and expeditions."
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
