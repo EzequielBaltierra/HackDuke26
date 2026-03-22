@@ -6,6 +6,7 @@ import { ExpeditionCard } from '../../src/components/ExpeditionCard';
 import { FeedToggle } from '../../src/components/FeedToggle';
 import { useDiscoveries } from '../../src/hooks/useDiscoveries';
 import { useExpeditions } from '../../src/hooks/useExpeditions';
+import { colors } from '../../src/theme/colors';
 import { Discovery, Expedition } from '../../src/types';
 
 export default function FeedScreen() {
@@ -18,24 +19,26 @@ export default function FeedScreen() {
   const refresh = isExpeditions ? eRefresh : dRefresh;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#eaded0' }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bgPrimary }} edges={['top']}>
       <FeedToggle active={activeTab} onChange={setActiveTab} />
-      <FlatList
+      <FlatList<Discovery | Expedition>
         data={isExpeditions ? expeditions : discoveries}
         keyExtractor={item => item.id}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refresh} tintColor="#4e705e" />
+          <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.greenAccent} />
         }
         renderItem={({ item }) =>
-          isExpeditions
-            ? <ExpeditionCard expedition={item as Expedition} />
-            : <DiscoveryCard discovery={item as Discovery} />
+          isExpeditions ? (
+            <ExpeditionCard expedition={item as Expedition} />
+          ) : (
+            <DiscoveryCard discovery={item as Discovery} />
+          )
         }
         ListEmptyComponent={
           !loading ? (
             <View style={{ alignItems: 'center', marginTop: 80 }}>
               <Text style={{ fontSize: 48 }}>{isExpeditions ? '🥾' : '🌿'}</Text>
-              <Text style={{ fontSize: 16, color: '#6d3a3c', marginTop: 12, opacity: 0.7 }}>
+              <Text style={{ fontSize: 16, color: colors.redBase, marginTop: 12, opacity: 0.75 }}>
                 No {activeTab} yet. Be the first!
               </Text>
             </View>

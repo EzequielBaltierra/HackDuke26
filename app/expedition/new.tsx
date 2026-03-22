@@ -170,7 +170,7 @@ export default function NewExpeditionScreen() {
         <Text style={{ fontSize: 24, fontWeight: '800', color: '#361319', marginBottom: 20 }}>Log Expedition 🥾</Text>
 
         {/* Photos — required */}
-        <Label>Photos * (up to {MAX_PHOTOS})</Label>
+        <Label>{`Photos * (up to ${MAX_PHOTOS})`}</Label>
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           {photos.map((uri, i) => (
             <View key={i} style={{ position: 'relative' }}>

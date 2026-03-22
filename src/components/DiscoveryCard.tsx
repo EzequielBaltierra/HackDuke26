@@ -1,80 +1,133 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
+import {
+  FeedBadgeShields,
+  FeedUserRow,
+  formatFeedDate,
+  formatLocationCommaDate,
+} from './feed/feedCardUtils';
+import { colors } from '../theme/colors';
+import { textStyles } from '../theme/typography';
 import { Discovery } from '../types';
 
 type Props = { discovery: Discovery };
 
-const categoryEmoji: Record<string, string> = {
-  plants: '🌱', trees: '🌳', flowers: '🌸', fungi: '🍄',
-  insects: '🦋', birds: '🦜', mammals: '🦊', other: '🔍',
+const categoryLabel: Record<string, string> = {
+  plants: 'Plants',
+  trees: 'Trees',
+  flowers: 'Flowers',
+  fungi: 'Fungi',
+  insects: 'Insects',
+  birds: 'Birds',
+  mammals: 'Mammals',
+  other: 'Other',
 };
+
+function discoveryLocationLine(d: Discovery) {
+  const date = formatFeedDate(d.created_at);
+  if (d.is_sensitive) {
+    return `Location withheld, ${date}`;
+  }
+  return formatLocationCommaDate(null, d.created_at);
+}
 
 export function DiscoveryCard({ discovery }: Props) {
   const router = useRouter();
+  const openDetail = () => router.push(`/discovery/${discovery.id}`);
 
   return (
-    <TouchableOpacity
-      onPress={() => router.push(`/discovery/${discovery.id}`)}
+    <View
       style={{
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
+        backgroundColor: colors.bgPrimary,
+        borderRadius: 20,
         marginHorizontal: 12,
-        marginVertical: 6,
+        marginVertical: 8,
         overflow: 'hidden',
-        shadowColor: '#110703',
-        shadowOpacity: 0.07,
-        shadowRadius: 8,
-        elevation: 2,
         borderWidth: 1,
-        borderColor: '#c7af94',
+        borderColor: colors.bgAccent,
+        shadowColor: colors.textPrimary,
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+        elevation: 3,
       }}
     >
-      <Image source={{ uri: discovery.image_url }} style={{ width: '100%', height: 220 }} resizeMode="cover" />
-      <View style={{ padding: 14 }}>
-        {/* Header row: avatar area + username + points */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-          <View style={{
-            width: 36, height: 36, borderRadius: 18,
-            backgroundColor: '#eaded0', justifyContent: 'center', alignItems: 'center',
-            borderWidth: 1, borderColor: '#c7af94', marginRight: 8,
-          }}>
-            <Text style={{ fontSize: 16 }}>🌿</Text>
+      <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
+        <View style={{ padding: 16, paddingBottom: 10 }}>
+          <FeedUserRow user={discovery.users} />
+
+          <Text style={[textStyles.postTitle, { marginBottom: 4 }]}>{discovery.common_name}</Text>
+
+          {discovery.scientific_name ? (
+            <Text
+              style={{
+                fontFamily: textStyles.postDescription.fontFamily,
+                fontSize: 15,
+                color: colors.redBase,
+                fontStyle: 'italic',
+                marginBottom: 6,
+              }}
+            >
+              {discovery.scientific_name}
+            </Text>
+          ) : null}
+
+          <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{discoveryLocationLine(discovery)}</Text>
+
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+            <View
+              style={{
+                borderRadius: 20,
+                paddingHorizontal: 12,
+                paddingVertical: 5,
+                backgroundColor: colors.bgAccent,
+                borderWidth: 1,
+                borderColor: colors.redBase,
+              }}
+            >
+              <Text style={textStyles.vibeTag}>{categoryLabel[discovery.category] ?? discovery.category}</Text>
+            </View>
           </View>
-          <Text style={{ fontSize: 15, fontWeight: '600', color: '#110703', flex: 1 }}>
-            {discovery.users?.username ?? 'Explorer'}
-          </Text>
-          {discovery.points_earned > 0 ? (
-            <Text style={{ fontSize: 13, color: '#4e705e', fontWeight: '700' }}>
-              +{discovery.points_earned} pts
+
+          {discovery.caption ? (
+            <Text style={[textStyles.postDescription, { opacity: 0.92, marginBottom: 12 }]} numberOfLines={8}>
+              {discovery.caption}
             </Text>
           ) : null}
         </View>
+      </TouchableOpacity>
 
-        {/* Title */}
-        <Text style={{ fontSize: 17, fontWeight: '700', color: '#361319', marginBottom: 2 }}>
-          {categoryEmoji[discovery.category] ?? '🔍'} {discovery.common_name}
-        </Text>
+      <TouchableOpacity onPress={openDetail} activeOpacity={0.95}>
+        <Image source={{ uri: discovery.image_url }} style={{ width: '100%', height: 220 }} resizeMode="cover" />
+      </TouchableOpacity>
 
-        {/* Scientific name */}
-        {discovery.scientific_name ? (
-          <Text style={{ fontSize: 12, color: '#6d3a3c', fontStyle: 'italic', marginBottom: 4 }}>
-            {discovery.scientific_name}
-          </Text>
-        ) : null}
-
-        {/* Caption */}
-        {discovery.caption ? (
-          <Text style={{ fontSize: 14, color: '#110703', marginBottom: 6, opacity: 0.8 }} numberOfLines={2}>
-            {discovery.caption}
-          </Text>
-        ) : null}
-
-        {/* Meta */}
-        <Text style={{ fontSize: 12, color: '#6d3a3c', opacity: 0.7 }}>
-          {new Date(discovery.created_at).toLocaleDateString()}
-        </Text>
-      </View>
-    </TouchableOpacity>
+      <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            backgroundColor: colors.bgAccent,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={[textStyles.duration, { opacity: 0.9 }]} numberOfLines={1}>
+              {formatFeedDate(discovery.created_at)}
+            </Text>
+          </View>
+          <View style={{ paddingHorizontal: 8 }}>
+            <FeedBadgeShields />
+          </View>
+          <View style={{ flex: 1, alignItems: 'flex-end' }}>
+            {discovery.points_earned > 0 ? (
+              <Text style={textStyles.points}>+{discovery.points_earned} points</Text>
+            ) : (
+              <Text style={[textStyles.duration, { opacity: 0.45 }]}>—</Text>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+    </View>
   );
 }
