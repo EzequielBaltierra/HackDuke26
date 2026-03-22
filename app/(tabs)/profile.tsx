@@ -199,7 +199,9 @@ export default function ProfileScreen() {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
               {discoveries.map(d => (
                 d.image_url ? (
-                  <Image key={d.id} source={{ uri: d.image_url }} style={{ width: 100, height: 100, borderRadius: 10 }} />
+                  <TouchableOpacity key={d.id} onPress={() => router.push(`/discovery/${d.id}`)}>
+                    <Image source={{ uri: d.image_url }} style={{ width: 100, height: 100, borderRadius: 10 }} />
+                  </TouchableOpacity>
                 ) : null
               ))}
             </View>
