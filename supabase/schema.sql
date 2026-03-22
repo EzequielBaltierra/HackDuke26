@@ -50,6 +50,7 @@ create table if not exists expeditions (
   start_time timestamptz,
   end_time timestamptz,
   is_live boolean default false not null,
+  route_waypoints jsonb,
   points_earned integer default 0 not null,
   created_at timestamptz default now() not null
 );

@@ -4,6 +4,7 @@ import { Animated, Image, NativeScrollEvent, NativeSyntheticEvent, ScrollView, T
 import { Icon } from './Icon';
 import { hrefUserProfile, hrefLocation } from '../lib/routes';
 import { expeditionLocationKey } from '../lib/locationKey';
+import { openRouteInMaps } from '../lib/mapLink';
 import {
   FeedUserRow,
   formatDistanceMiles,
@@ -50,7 +51,9 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
 
   const showFooter = Boolean(distanceStr || durationStr || expedition.points_earned > 0);
 
+  const hasRoute = (expedition.route_waypoints?.length ?? 0) >= 2;
   const locationNavKey = expeditionLocationKey(expedition);
+  const isTappable = hasRoute || Boolean(locationNavKey);
 
   const goUser = authorId ? () => router.push(hrefUserProfile(authorId)) : undefined;
 
@@ -116,8 +119,19 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
 
         <Text style={[textStyles.postTitle, { marginBottom: 6 }]}>{expedition.title}</Text>
 
-        {locationNavKey ? (
-          <TouchableOpacity onPress={openLocationPage} activeOpacity={0.7} accessibilityRole="link">
+        {isTappable ? (
+          <TouchableOpacity
+            onPress={() => {
+              if (hasRoute) {
+                openRouteInMaps(expedition.route_waypoints!, expedition.location ?? expedition.title);
+              } else {
+                openLocationPage();
+              }
+            }}
+            activeOpacity={0.7}
+            accessibilityRole="link"
+            accessibilityLabel={`Open ${expedition.location ?? 'location'} in maps`}
+          >
             <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{locationLine}</Text>
           </TouchableOpacity>
         ) : (

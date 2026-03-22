@@ -49,6 +49,7 @@ export type Expedition = {
   location: string | null;
   location_lat: number | null;
   location_lng: number | null;
+  route_waypoints: { lat: number; lng: number }[] | null;
   distance: number | null;
   difficulty: Difficulty | null;
   vibe_tags: string[];

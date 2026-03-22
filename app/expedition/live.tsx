@@ -38,6 +38,9 @@ export default function LiveExpeditionScreen() {
   const lastFixRef = useRef<Location.LocationObject | null>(null);
   const pathMetersRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startCapturedRef = useRef(false);
+  const lastWaypointCoordsRef = useRef<Location.LocationObject['coords'] | null>(null);
+  const waypointsRef = useRef<{ lat: number; lng: number }[]>([]);
 
   useEffect(() => {
     elapsedRef.current = elapsed;
@@ -63,6 +66,7 @@ export default function LiveExpeditionScreen() {
         endTimeIso: end.toISOString(),
         distanceMiles: finalMiles,
         photoUris: photosRef.current,
+        routeWaypoints: waypointsRef.current,
       });
       router.push('/expedition/live-review');
     },
@@ -98,6 +102,12 @@ export default function LiveExpeditionScreen() {
     }
     setGpsTracks(d.gpsEnabled);
 
+    // Reset route refs in case this component instance is reused
+    waypointsRef.current = [];
+    lastWaypointCoordsRef.current = null;
+    pathMetersRef.current = 0;
+    startCapturedRef.current = false;
+
     const start = new Date();
     updateLiveExpeditionDraft({
       startTimeIso: start.toISOString(),
@@ -132,6 +142,31 @@ export default function LiveExpeditionScreen() {
           timeInterval: 800,
         },
         loc => {
+          // --- Start location capture (first fix only) ---
+          if (!startCapturedRef.current) {
+            startCapturedRef.current = true;
+            updateLiveExpeditionDraft({
+              startLat: loc.coords.latitude,
+              startLng: loc.coords.longitude,
+            });
+            fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${loc.coords.latitude}&lon=${loc.coords.longitude}&format=json`,
+              { headers: { 'User-Agent': 'Root-HackDuke/1.0' } }
+            )
+              .then(r => r.json())
+              .then(data => {
+                if (data.display_name) {
+                  updateLiveExpeditionDraft({ locationLabel: data.display_name });
+                }
+              })
+              .catch(() => {
+                updateLiveExpeditionDraft({
+                  locationLabel: `${loc.coords.latitude.toFixed(4)}, ${loc.coords.longitude.toFixed(4)}`,
+                });
+              });
+          }
+
+          // --- Distance accumulation (existing logic) ---
           const prev = lastFixRef.current;
           if (prev) {
             const delta = haversineMeters(prev.coords, loc.coords);
@@ -141,6 +176,19 @@ export default function LiveExpeditionScreen() {
             }
           }
           lastFixRef.current = loc;
+
+          // --- Waypoint recording (every 25m) ---
+          const waypoint = { lat: loc.coords.latitude, lng: loc.coords.longitude };
+          if (!lastWaypointCoordsRef.current) {
+            waypointsRef.current.push(waypoint);
+            lastWaypointCoordsRef.current = loc.coords;
+          } else {
+            const distFromLast = haversineMeters(lastWaypointCoordsRef.current, loc.coords);
+            if (distFromLast >= 25) {
+              waypointsRef.current.push(waypoint);
+              lastWaypointCoordsRef.current = loc.coords;
+            }
+          }
         },
       );
       watchRef.current = sub;

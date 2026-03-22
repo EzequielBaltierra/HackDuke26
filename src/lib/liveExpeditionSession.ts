@@ -18,6 +18,11 @@ export type LiveExpeditionDraft = {
   photoUris: string[];
   /** Filled after AI review step. */
   photoInsights: PhotoInsight[];
+  /** GPS start coordinates captured from the first fix. */
+  startLat: number | null;
+  startLng: number | null;
+  /** Accumulated route waypoints (one per 25m of travel). */
+  routeWaypoints: { lat: number; lng: number }[];
 };
 
 let draft: LiveExpeditionDraft | null = null;

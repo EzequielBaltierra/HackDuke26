@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -12,25 +12,17 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FilterBadge } from '../../src/components/expedition/FilterBadge';
 import { ArrowLeftIcon } from '../../src/components/icons/ExpeditionIcons';
-import { EXPEDITION_VIBE_TAGS, LOCAL_PLACE_HINTS } from '../../src/constants/expeditionVibes';
+import { EXPEDITION_VIBE_TAGS } from '../../src/constants/expeditionVibes';
 import { clearLiveExpeditionDraft, setLiveExpeditionDraft } from '../../src/lib/liveExpeditionSession';
 import { colors } from '../../src/theme/colors';
 import { ff, textStyles } from '../../src/theme/typography';
 
 export default function LiveExpeditionSetupScreen() {
   const router = useRouter();
-  const [search, setSearch] = useState('');
   const [locationLabel, setLocationLabel] = useState('');
   const [vibes, setVibes] = useState<string[]>([]);
   const [gpsEnabled, setGpsEnabled] = useState(true);
-
-  const hints = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (q.length < 2) return [];
-    return LOCAL_PLACE_HINTS.filter(h => h.toLowerCase().includes(q)).slice(0, 8);
-  }, [search]);
 
   function addVibe(tag: string) {
     setVibes(prev => (prev.includes(tag) ? prev : [...prev, tag]));
@@ -41,14 +33,16 @@ export default function LiveExpeditionSetupScreen() {
   }
 
   function start() {
-    const loc = locationLabel.trim() || search.trim();
-    if (!loc) {
-      Alert.alert('Location needed', 'Enter or pick a location for your hike.');
-      return;
+    if (!gpsEnabled) {
+      const loc = locationLabel.trim();
+      if (!loc) {
+        Alert.alert('Location needed', 'Enter a location for your hike.');
+        return;
+      }
     }
     clearLiveExpeditionDraft();
     setLiveExpeditionDraft({
-      locationLabel: loc,
+      locationLabel: gpsEnabled ? '' : locationLabel.trim(),
       vibeTags: vibes,
       gpsEnabled,
       durationSeconds: 0,
@@ -57,6 +51,9 @@ export default function LiveExpeditionSetupScreen() {
       distanceMiles: 0,
       photoUris: [],
       photoInsights: [],
+      startLat: null,
+      startLng: null,
+      routeWaypoints: [],
     });
     router.push('/expedition/live');
   }
@@ -87,52 +84,44 @@ export default function LiveExpeditionSetupScreen() {
             if tracking is off).
           </Text>
 
-          <Text style={labelStyle}>Search location</Text>
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Trail, park, city…"
-            placeholderTextColor={colors.bgAccent}
-            style={{
-              backgroundColor: colors.redAccent,
-              borderRadius: 14,
-              paddingHorizontal: 16,
-              paddingVertical: 14,
-              fontFamily: ff.crimson,
-              fontSize: 17,
-              color: colors.bgPrimary,
-              marginBottom: 12,
-            }}
-            autoCapitalize="words"
-          />
-
-          {hints.length > 0 ? (
-            <View style={{ marginBottom: 12 }}>
-              {hints.map(h => (
-                <TouchableOpacity
-                  key={h}
-                  onPress={() => {
-                    setLocationLabel(h);
-                    setSearch(h);
-                  }}
-                  style={{
-                    paddingVertical: 10,
-                    paddingHorizontal: 12,
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.bgAccent,
-                  }}
-                >
-                  <Text style={{ fontFamily: ff.crimson, fontSize: 16, color: colors.textPrimary }}>{h}</Text>
-                </TouchableOpacity>
-              ))}
+          {gpsEnabled ? (
+            <View
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 14,
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                marginBottom: 20,
+                borderWidth: 1,
+                borderColor: colors.bgAccent,
+              }}
+            >
+              <Text style={{ fontFamily: ff.crimson, fontSize: 15, color: colors.textMuted }}>
+                Your start location will be detected automatically.
+              </Text>
             </View>
-          ) : null}
-
-          {locationLabel ? (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 }}>
-              <FilterBadge label="Location" value={locationLabel} onRemove={() => setLocationLabel('')} />
-            </View>
-          ) : null}
+          ) : (
+            <>
+              <Text style={labelStyle}>Location</Text>
+              <TextInput
+                value={locationLabel}
+                onChangeText={setLocationLabel}
+                placeholder="Trail, park, city…"
+                placeholderTextColor={colors.bgAccent}
+                style={{
+                  backgroundColor: colors.redAccent,
+                  borderRadius: 14,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  fontFamily: ff.crimson,
+                  fontSize: 17,
+                  color: colors.bgPrimary,
+                  marginBottom: 20,
+                }}
+                autoCapitalize="words"
+              />
+            </>
+          )}
 
           <Text style={labelStyle}>Vibe tags</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 }}>
