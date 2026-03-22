@@ -1,17 +1,18 @@
-// app/user/[id]/index.tsx — Read-only public profile screen
-// Note: fetchUserProfile also fetches expeditions but the result is intentionally unused here.
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View,
+  Animated, ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View,
 } from 'react-native';
 import { Icon } from '../../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { fetchUserProfile } from '../../../src/hooks/useProfile';
 import { getRank } from '../../../src/lib/points';
+import { useAuth } from '../../../src/hooks/useAuth';
+import { useViewerFollowingIds } from '../../../src/hooks/useFollows';
+import { ExpeditionCard } from '../../../src/components/ExpeditionCard';
 import { colors } from '../../../src/theme/colors';
 import { textStyles } from '../../../src/theme/typography';
-import { Badge, Discovery, User } from '../../../src/types';
+import { Badge, Discovery, Expedition, User } from '../../../src/types';
 
 const BADGE_LABELS: Record<string, string> = {
   first_discovery: 'First Discovery',
@@ -38,6 +39,7 @@ type Profile = {
   user: User | null;
   badges: Badge[];
   discoveries: Partial<Discovery>[];
+  expeditions: Expedition[];
   followerCount: number;
   followingCount: number;
 };
@@ -45,24 +47,43 @@ type Profile = {
 export default function PublicProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { currentUser } = useAuth();
+  const { followingIds, toggleFollowing } = useViewerFollowingIds(currentUser?.id);
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const followScale = useRef(new Animated.Value(1)).current;
+
+  const profileUserId = id as string;
+  const isOwnProfile = currentUser?.id === profileUserId;
+  const isFollowing = followingIds.has(profileUserId);
 
   useEffect(() => {
-    if (!id) return;
+    if (!profileUserId) return;
     setLoading(true);
-    fetchUserProfile(id as string)
+    fetchUserProfile(profileUserId)
       .then(data => {
         if (!data.user) {
           setNotFound(true);
         } else {
           setProfile(data);
+          setFollowerCount(data.followerCount);
         }
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [profileUserId]);
+
+  function handleFollowToggle() {
+    Animated.sequence([
+      Animated.spring(followScale, { toValue: 0.8, useNativeDriver: true, speed: 60, bounciness: 0 }),
+      Animated.spring(followScale, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 16 }),
+    ]).start();
+    toggleFollowing(profileUserId);
+    setFollowerCount(prev => isFollowing ? prev - 1 : prev + 1);
+  }
 
   if (loading) {
     return (
@@ -84,12 +105,17 @@ export default function PublicProfileScreen() {
     );
   }
 
-  const { user, badges, discoveries, followerCount, followingCount } = profile;
+  const { user, badges, discoveries, expeditions, followingCount } = profile;
   const rank = getRank(user.total_points);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
       <SafeAreaView>
+        {/* Back */}
+        <TouchableOpacity onPress={() => router.back()} style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+          <Text style={{ color: colors.greenBase, fontSize: 15, fontWeight: '700' }}>← Back</Text>
+        </TouchableOpacity>
+
         {/* Header */}
         <View style={{ padding: 24, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: colors.bgAccent }}>
           {user.profile_photo_url ? (
@@ -102,6 +128,7 @@ export default function PublicProfileScreen() {
               <Icon name="clover" size={36} color={colors.bgPrimary} />
             </View>
           )}
+
           <Text style={[textStyles.userName, { fontSize: 22, fontWeight: '800' }]}>@{user.username}</Text>
 
           {/* Rank badge + progress */}
@@ -118,10 +145,14 @@ export default function PublicProfileScreen() {
             </Text>
           </View>
 
+
           {user.bio ? (
-            <Text style={[textStyles.postDescription, { color: colors.redBase, textAlign: 'center', marginTop: 4 }]}>{user.bio}</Text>
+            <Text style={[textStyles.postDescription, { color: colors.redBase, textAlign: 'center', marginTop: 4, marginBottom: 4 }]}>
+              {user.bio}
+            </Text>
           ) : null}
 
+          {/* Follower / Following counts */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 10, paddingHorizontal: 8 }}>
             <TouchableOpacity
               onPress={() => router.push({ pathname: '/user/[id]/followers', params: { id: user.id } })}
@@ -143,6 +174,32 @@ export default function PublicProfileScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Follow / Unfollow button */}
+          {!isOwnProfile ? (
+            <TouchableOpacity onPress={handleFollowToggle} activeOpacity={1}>
+              <Animated.View
+                style={{
+                  marginTop: 14,
+                  paddingHorizontal: 32,
+                  paddingVertical: 10,
+                  borderRadius: 20,
+                  backgroundColor: isFollowing ? colors.bgAccent : colors.greenBase,
+                  borderWidth: 1.5,
+                  borderColor: colors.greenBase,
+                  transform: [{ scale: followScale }],
+                }}
+              >
+                <Text style={{
+                  fontWeight: '700',
+                  fontSize: 14,
+                  color: isFollowing ? colors.greenBase : colors.bgPrimary,
+                }}>
+                  {isFollowing ? 'Following' : 'Follow'}
+                </Text>
+              </Animated.View>
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {/* Stats */}
@@ -151,18 +208,19 @@ export default function PublicProfileScreen() {
             { iconName: 'star' as const, value: user.total_points.toLocaleString(), label: 'Points' },
             { iconName: 'campfire' as const, value: `${user.streak}d`, label: 'Streak' },
             { iconName: 'magnifying-glass' as const, value: discoveries.length.toString(), label: 'Spots' },
+            { iconName: 'footprints' as const, value: expeditions.length.toString(), label: 'Trips' },
           ].map(({ iconName, value, label }) => (
-            <View key={label} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 14, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.bgAccent }}>
-              <Icon name={iconName} size={24} color={colors.greenBase} />
-              <Text style={{ fontSize: 20, fontWeight: '800', color: colors.greenBase, marginTop: 4 }}>{value}</Text>
-              <Text style={{ fontSize: 10, color: colors.redBase, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</Text>
+            <View key={label} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 14, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.bgAccent }}>
+              <Icon name={iconName} size={22} color={colors.greenBase} />
+              <Text style={{ fontSize: 16, fontWeight: '800', color: colors.greenBase, marginTop: 2 }}>{value}</Text>
+              <Text style={{ fontSize: 9, color: colors.redBase, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</Text>
             </View>
           ))}
         </View>
 
         {/* Badges */}
         {badges.length > 0 ? (
-          <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
+          <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
             <Text style={[textStyles.postTitle, { marginBottom: 10 }]}>Badges</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {badges.map(b => (
@@ -178,22 +236,35 @@ export default function PublicProfileScreen() {
 
         {/* Discovery grid */}
         {discoveries.length > 0 ? (
-          <View style={{ paddingHorizontal: 16, marginBottom: 24 }}>
+          <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
             <Text style={[textStyles.postTitle, { marginBottom: 10 }]}>Discoveries</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
               {discoveries.map(d =>
                 d.image_url ? (
-                  <Image key={d.id} source={{ uri: d.image_url }} style={{ width: 100, height: 100, borderRadius: 10 }} />
+                  <TouchableOpacity key={d.id} onPress={() => router.push(`/discovery/${d.id}`)}>
+                    <Image source={{ uri: d.image_url }} style={{ width: 100, height: 100, borderRadius: 10 }} />
+                  </TouchableOpacity>
                 ) : null
               )}
             </View>
           </View>
         ) : null}
 
-        {/* Back button */}
-        <TouchableOpacity onPress={() => router.back()} style={{ margin: 16, padding: 14, borderRadius: 12, backgroundColor: colors.bgAccent, alignItems: 'center' }}>
-          <Text style={{ color: colors.redAccent, fontWeight: '700', fontSize: 15 }}>Back</Text>
-        </TouchableOpacity>
+        {/* Expeditions */}
+        {expeditions.length > 0 ? (
+          <View style={{ marginBottom: 24 }}>
+            <Text style={[textStyles.postTitle, { paddingHorizontal: 16, marginBottom: 10 }]}>Expeditions</Text>
+            {expeditions.map(e => (
+              <ExpeditionCard
+                key={e.id}
+                expedition={e}
+                viewerUserId={currentUser?.id}
+                followingIds={followingIds}
+                onToggleFollow={toggleFollowing}
+              />
+            ))}
+          </View>
+        ) : null}
       </SafeAreaView>
     </ScrollView>
   );

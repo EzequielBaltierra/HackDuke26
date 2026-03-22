@@ -1,9 +1,9 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View,
+  Alert, Animated, Image, ScrollView, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculateExpeditionPoints, awardPoints, checkAndAwardBadges } from '../../src/lib/points';
@@ -254,24 +254,24 @@ export default function NewExpeditionScreen() {
         <Label>Type</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
           {EXPEDITION_TYPES.map(t => (
-            <TouchableOpacity key={t} onPress={() => setType(t)}
+            <SpringPressable key={t} onPress={() => setType(t)}
               style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
                 backgroundColor: type === t ? '#4e705e' : '#c7af94', borderWidth: 1, borderColor: '#c7af94' }}>
               <Text style={{ color: type === t ? '#eaded0' : '#361319', fontWeight: '600', textTransform: 'capitalize' }}>
                 {t.replace('_', ' ')}
               </Text>
-            </TouchableOpacity>
+            </SpringPressable>
           ))}
         </View>
 
         <Label>Difficulty</Label>
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
           {DIFFICULTIES.map(d => (
-            <TouchableOpacity key={d} onPress={() => setDifficulty(d)}
+            <SpringPressable key={d} onPress={() => setDifficulty(d)}
               style={{ flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center',
                 backgroundColor: difficulty === d ? '#4e705e' : '#c7af94' }}>
               <Text style={{ color: difficulty === d ? '#eaded0' : '#361319', fontWeight: '600', textTransform: 'capitalize' }}>{d}</Text>
-            </TouchableOpacity>
+            </SpringPressable>
           ))}
         </View>
 
@@ -292,12 +292,12 @@ export default function NewExpeditionScreen() {
         <Label>Vibes</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
           {VIBE_TAGS.map(tag => (
-            <TouchableOpacity key={tag} onPress={() => toggleVibeTag(tag)}
+            <SpringPressable key={tag} onPress={() => toggleVibeTag(tag)}
               style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
                 backgroundColor: selectedVibeTags.includes(tag) ? '#4e705e' : '#eaded0',
                 borderWidth: 1, borderColor: '#c7af94' }}>
               <Text style={{ color: selectedVibeTags.includes(tag) ? '#eaded0' : '#361319', fontSize: 13 }}>{tag}</Text>
-            </TouchableOpacity>
+            </SpringPressable>
           ))}
         </View>
 
@@ -338,4 +338,22 @@ const inputStyle = {
 
 function Label({ children }: { children: string }) {
   return <Text style={{ fontSize: 12, fontWeight: '700', color: '#6d3a3c', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{children}</Text>;
+}
+
+function SpringPressable({ onPress, style, children }: { onPress: () => void; style?: object; children: React.ReactNode }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  function handlePress() {
+    Animated.sequence([
+      Animated.spring(scale, { toValue: 0.88, useNativeDriver: true, speed: 60, bounciness: 0 }),
+      Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 14 }),
+    ]).start();
+    onPress();
+  }
+  return (
+    <TouchableOpacity onPress={handlePress} activeOpacity={1}>
+      <Animated.View style={[style, { transform: [{ scale }] }]}>
+        {children}
+      </Animated.View>
+    </TouchableOpacity>
+  );
 }

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Image, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Icon } from './Icon';
 import { hrefUserProfile } from '../lib/routes';
 import {
@@ -26,7 +26,19 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
   const { currentUser } = useAuth();
   const router = useRouter();
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [carouselWidth, setCarouselWidth] = useState(0);
   const photos = expedition.photo_urls ?? [];
+  const dotAnims = useRef(photos.map((_, i) => new Animated.Value(i === 0 ? 18 : 7))).current;
+
+  useEffect(() => {
+    dotAnims.forEach((anim, i) => {
+      Animated.timing(anim, {
+        toValue: i === photoIndex ? 18 : 7,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    });
+  }, [photoIndex]);
   const authorId = expedition.users?.id;
   const isFollowing = authorId ? followingIds?.has(authorId) : false;
 
@@ -38,6 +50,12 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
   const showFooter = Boolean(distanceStr || durationStr || expedition.points_earned > 0);
 
   const goUser = authorId ? () => router.push(hrefUserProfile(authorId)) : undefined;
+
+  function handleScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    if (carouselWidth === 0) return;
+    const page = Math.round(e.nativeEvent.contentOffset.x / carouselWidth);
+    setPhotoIndex(page);
+  }
 
   return (
     <View
@@ -115,79 +133,61 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
       </View>
 
       {photos.length > 0 ? (
-        <View>
-          <Image source={{ uri: photos[photoIndex] }} style={{ width: '100%', height: 220 }} resizeMode="cover" />
+        <View
+          onLayout={e => setCarouselWidth(e.nativeEvent.layout.width)}
+        >
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScroll={handleScroll}
+          >
+            {photos.map((uri, i) => (
+              <Image
+                key={i}
+                source={{ uri }}
+                style={{ width: carouselWidth || 300, height: 220 }}
+                resizeMode="cover"
+              />
+            ))}
+          </ScrollView>
+
           {photos.length > 1 ? (
-            <>
-              <TouchableOpacity
-                onPress={() => setPhotoIndex(i => (i - 1 + photos.length) % photos.length)}
-                style={{
-                  position: 'absolute',
-                  left: 12,
-                  top: '50%',
-                  marginTop: -18,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: 'rgba(17,7,3,0.35)',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: colors.tabIconActive, fontSize: 22, marginTop: -2 }}>‹</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setPhotoIndex(i => (i + 1) % photos.length)}
-                style={{
-                  position: 'absolute',
-                  right: 12,
-                  top: '50%',
-                  marginTop: -18,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: 'rgba(17,7,3,0.35)',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: colors.tabIconActive, fontSize: 22, marginTop: -2 }}>›</Text>
-              </TouchableOpacity>
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 10,
+                left: 0,
+                right: 0,
+                alignItems: 'center',
+              }}
+            >
               <View
                 style={{
-                  position: 'absolute',
-                  bottom: 10,
-                  left: 0,
-                  right: 0,
-                  alignItems: 'center',
+                  flexDirection: 'row',
+                  gap: 6,
+                  backgroundColor: 'rgba(17,7,3,0.45)',
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 20,
                 }}
               >
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    gap: 6,
-                    backgroundColor: 'rgba(17,7,3,0.45)',
-                    paddingHorizontal: 10,
-                    paddingVertical: 5,
-                    borderRadius: 20,
-                  }}
-                >
-                  {photos.map((_, i) => (
-                    <View
-                      key={i}
-                      style={{
-                        width: i === photoIndex ? 18 : 7,
-                        height: 7,
-                        borderRadius: 4,
-                        backgroundColor: i === photoIndex
-                          ? colors.tabIconActive
-                          : 'rgba(234,222,208,0.45)',
-                      }}
-                    />
-                  ))}
-                </View>
+                {photos.map((_, i) => (
+                  <Animated.View
+                    key={i}
+                    style={{
+                      width: dotAnims[i],
+                      height: 7,
+                      borderRadius: 4,
+                      backgroundColor: i === photoIndex
+                        ? colors.tabIconActive
+                        : 'rgba(234,222,208,0.45)',
+                    }}
+                  />
+                ))}
               </View>
-            </>
+            </View>
           ) : null}
         </View>
       ) : null}
