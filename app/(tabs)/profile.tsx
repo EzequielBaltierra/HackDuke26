@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { fetchUserProfile } from '../../src/hooks/useProfile';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Badge, Discovery, Expedition, User } from '../../src/types';
@@ -22,7 +23,21 @@ type Profile = {
 
 export default function ProfileScreen() {
   const { currentUser, logout } = useAuth();
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
+
+  function handleSignOut() {
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out', style: 'destructive',
+        onPress: async () => {
+          await logout();
+          router.replace('/login');
+        },
+      },
+    ]);
+  }
 
   useEffect(() => {
     if (currentUser) {
@@ -113,7 +128,7 @@ export default function ProfileScreen() {
         ) : null}
 
         <TouchableOpacity
-          onPress={logout}
+          onPress={handleSignOut}
           style={{ margin: 16, padding: 14, borderRadius: 12, backgroundColor: '#6d3a3c', alignItems: 'center' }}
         >
           <Text style={{ color: '#eaded0', fontWeight: '700', fontSize: 15 }}>Sign Out</Text>
