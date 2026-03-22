@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Icon } from './Icon';
 import { hrefUserProfile } from '../lib/routes';
-import { openInMaps } from '../lib/mapLink';
+import { openInMaps, openRouteInMaps } from '../lib/mapLink';
 import {
   FeedBadgeShields,
   FeedUserRow,
@@ -50,7 +50,9 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
 
   const showFooter = Boolean(distanceStr || durationStr || expedition.points_earned > 0);
 
+  const hasRoute = (expedition.route_waypoints?.length ?? 0) >= 2;
   const hasCoords = expedition.location_lat != null && expedition.location_lng != null;
+  const isTappable = hasRoute || hasCoords;
 
   const goUser = authorId ? () => router.push(hrefUserProfile(authorId)) : undefined;
 
@@ -106,13 +108,15 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
 
         <Text style={[textStyles.postTitle, { marginBottom: 6 }]}>{expedition.title}</Text>
 
-        {hasCoords ? (
+        {isTappable ? (
           <TouchableOpacity
-            onPress={() => openInMaps(
-              expedition.location ?? locationLine,
-              expedition.location_lat!,
-              expedition.location_lng!
-            )}
+            onPress={() => {
+              if (hasRoute) {
+                openRouteInMaps(expedition.route_waypoints!, expedition.location ?? expedition.title);
+              } else {
+                openInMaps(expedition.location ?? expedition.title, expedition.location_lat!, expedition.location_lng!);
+              }
+            }}
             activeOpacity={0.7}
             accessibilityRole="link"
             accessibilityLabel={`Open ${expedition.location ?? 'location'} in maps`}
