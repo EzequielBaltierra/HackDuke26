@@ -153,6 +153,9 @@ export default function LiveExpeditionPostScreen() {
           duration_seconds: draft.durationSeconds,
           start_time: draft.startTimeIso,
           end_time: draft.endTimeIso,
+          location_lat: draft.startLat ?? null,
+          location_lng: draft.startLng ?? null,
+          route_waypoints: (draft.routeWaypoints?.length ?? 0) >= 2 ? draft.routeWaypoints : null,
           points_earned: expeditionPoints,
         })
         .select()
