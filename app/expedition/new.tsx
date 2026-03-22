@@ -167,6 +167,10 @@ export default function NewExpeditionScreen() {
       <SafeAreaView style={{ padding: 16 }}>
         {pointsBreakdown ? <PointsToast points={pointsBreakdown} visible={showToast} /> : null}
 
+        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 12 }}>
+          <Text style={{ fontSize: 16, color: '#4e705e', fontWeight: '700' }}>← Cancel</Text>
+        </TouchableOpacity>
+
         <Text style={{ fontSize: 24, fontWeight: '800', color: '#361319', marginBottom: 20 }}>Log Expedition 🥾</Text>
 
         {/* Photos — required */}
