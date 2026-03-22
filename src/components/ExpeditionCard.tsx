@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Icon } from './Icon';
 import { hrefUserProfile } from '../lib/routes';
+import { openInMaps } from '../lib/mapLink';
 import {
   FeedBadgeShields,
   FeedUserRow,
@@ -48,6 +49,8 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
   const displayTripCount = expedition.trip_count ?? 1;
 
   const showFooter = Boolean(distanceStr || durationStr || expedition.points_earned > 0);
+
+  const hasCoords = expedition.location_lat != null && expedition.location_lng != null;
 
   const goUser = authorId ? () => router.push(hrefUserProfile(authorId)) : undefined;
 
@@ -103,7 +106,24 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
 
         <Text style={[textStyles.postTitle, { marginBottom: 6 }]}>{expedition.title}</Text>
 
-        <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{locationLine}</Text>
+        {hasCoords ? (
+          <TouchableOpacity
+            onPress={() => openInMaps(
+              expedition.location ?? locationLine,
+              expedition.location_lat!,
+              expedition.location_lng!
+            )}
+            activeOpacity={0.7}
+            accessibilityRole="link"
+            accessibilityLabel={`Open ${expedition.location ?? 'location'} in maps`}
+          >
+            <Text style={[textStyles.postLocation, { marginBottom: 10, textDecorationLine: 'underline' }]}>
+              📍 {locationLine}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{locationLine}</Text>
+        )}
 
         {expedition.vibe_tags?.length > 0 ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
