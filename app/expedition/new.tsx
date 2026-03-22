@@ -236,7 +236,7 @@ export default function NewExpeditionScreen() {
                   borderWidth: 2, borderColor: '#4e705e', justifyContent: 'center', alignItems: 'center',
                 }}
               >
-                <Text style={{ color: '#4e705e', fontSize: 13, fontWeight: '700' }}>🖼 Library</Text>
+                <Text style={{ color: '#4e705e', fontSize: 13, fontWeight: '700' }}>Library</Text>
               </TouchableOpacity>
             </View>
           ) : null}

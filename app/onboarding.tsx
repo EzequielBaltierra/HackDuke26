@@ -3,27 +3,28 @@ import { Dimensions, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Icon, IconName } from '../src/components/Icon';
 
 const { width } = Dimensions.get('window');
 
-const SLIDES = [
+const SLIDES: { iconName: IconName; title: string; body: string }[] = [
   {
-    emoji: '🌿',
+    iconName: 'clover',
     title: 'Welcome to Root',
     body: 'Explore nature, identify species with AI, and earn points for every discovery you make.',
   },
   {
-    emoji: '📸',
+    iconName: 'magnifying-glass',
     title: 'Snap & Identify',
     body: 'Take a photo of any plant, animal, fungi, or insect. Our AI identifies it instantly and generates a fact card.',
   },
   {
-    emoji: '🥾',
+    iconName: 'person-simple-hike',
     title: 'Log Expeditions',
     body: 'Track your outdoor hikes and nature walks. Start a live expedition and let Root record your distance automatically.',
   },
   {
-    emoji: '🏆',
+    iconName: 'trophy',
     title: 'Climb the Ranks',
     body: 'Earn points, collect badges, and level up from Observer all the way to Ecologist. Compete on the leaderboard!',
   },
@@ -53,7 +54,9 @@ export default function OnboardingScreen() {
 
       {/* Content */}
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 36 }}>
-        <Text style={{ fontSize: 96, marginBottom: 24 }}>{slide.emoji}</Text>
+        <View style={{ marginBottom: 24, backgroundColor: '#4e705e', borderRadius: 32, padding: 24 }}>
+          <Icon name={slide.iconName} size={72} color="#eaded0" />
+        </View>
         <Text style={{ fontSize: 28, fontWeight: '800', color: '#361319', textAlign: 'center', marginBottom: 16 }}>
           {slide.title}
         </Text>
