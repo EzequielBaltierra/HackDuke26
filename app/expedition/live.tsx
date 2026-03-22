@@ -1,154 +1,362 @@
-import { useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { Icon } from '../../src/components/Icon';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { calculateExpeditionPoints, awardPoints } from '../../src/lib/points';
-import { supabase } from '../../src/lib/supabase';
-import { PointsToast } from '../../src/components/PointsToast';
-import { useAuth } from '../../src/hooks/useAuth';
-import { PointsBreakdown } from '../../src/types';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Alert,
+  Image,
+  Modal,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CameraIcon } from '../../src/components/expedition/CameraIcon';
+import { haversineMeters, metersToMiles } from '../../src/lib/geo';
+import { getLiveExpeditionDraft, updateLiveExpeditionDraft } from '../../src/lib/liveExpeditionSession';
+import { colors } from '../../src/theme/colors';
+import { ff } from '../../src/theme/typography';
 
-function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
+const TAB_BAR_OFFSET = 72;
 
 export default function LiveExpeditionScreen() {
   const router = useRouter();
-  const { currentUser } = useAuth();
-  const [running, setRunning] = useState(false);
+  const insets = useSafeAreaInsets();
   const [elapsed, setElapsed] = useState(0);
-  const [startTime, setStartTime] = useState<Date | null>(null);
-  const [distanceKm, setDistanceKm] = useState(0);
-  const [pointsBreakdown, setPointsBreakdown] = useState<PointsBreakdown | null>(null);
-  const [showToast, setShowToast] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const lastPositionRef = useRef<{ lat: number; lon: number } | null>(null);
-  const locationSubRef = useRef<Location.LocationSubscription | null>(null);
+  const elapsedRef = useRef(0);
+  const [distanceMiles, setDistanceMiles] = useState(0);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const photosRef = useRef<string[]>([]);
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
+  const [manualDistanceOpen, setManualDistanceOpen] = useState(false);
+  const [manualInput, setManualInput] = useState('');
+  const [gpsReady, setGpsReady] = useState(false);
+  const [gpsTracks, setGpsTracks] = useState(true);
+
+  const watchRef = useRef<Location.LocationSubscription | null>(null);
+  const lastFixRef = useRef<Location.LocationObject | null>(null);
+  const pathMetersRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      locationSubRef.current?.remove();
-    };
-  }, []);
+    elapsedRef.current = elapsed;
+  }, [elapsed]);
 
-  async function startExpedition() {
-    setRunning(true);
-    setStartTime(new Date());
-    setDistanceKm(0);
-    lastPositionRef.current = null;
-    intervalRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
 
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status === 'granted') {
-      locationSubRef.current = await Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.Balanced, distanceInterval: 10 },
-        (loc) => {
-          const { latitude, longitude } = loc.coords;
-          if (lastPositionRef.current) {
-            const d = haversineKm(lastPositionRef.current.lat, lastPositionRef.current.lon, latitude, longitude);
-            setDistanceKm(prev => prev + d);
+  const stopAndGoReview = useCallback(
+    (finalMiles: number) => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      watchRef.current?.remove();
+      watchRef.current = null;
+
+      if (!getLiveExpeditionDraft()) return;
+      const end = new Date();
+      updateLiveExpeditionDraft({
+        durationSeconds: elapsedRef.current,
+        endTimeIso: end.toISOString(),
+        distanceMiles: finalMiles,
+        photoUris: photosRef.current,
+      });
+      router.push('/expedition/live-review');
+    },
+    [router],
+  );
+
+  const finishStop = useCallback(() => {
+    const d = getLiveExpeditionDraft();
+    if (!d) return;
+    if (d.gpsEnabled) {
+      stopAndGoReview(metersToMiles(pathMetersRef.current));
+    } else {
+      setManualDistanceOpen(true);
+    }
+  }, [stopAndGoReview]);
+
+  const confirmManualDistance = useCallback(() => {
+    const n = parseFloat(manualInput.replace(/,/g, '.'));
+    if (Number.isNaN(n) || n < 0) {
+      Alert.alert('Invalid distance', 'Enter miles using a number (e.g. 2.5).');
+      return;
+    }
+    setManualDistanceOpen(false);
+    setManualInput('');
+    stopAndGoReview(n);
+  }, [manualInput, stopAndGoReview]);
+
+  useEffect(() => {
+    const d = getLiveExpeditionDraft();
+    if (!d) {
+      router.replace('/expedition/setup');
+      return;
+    }
+    setGpsTracks(d.gpsEnabled);
+
+    const start = new Date();
+    updateLiveExpeditionDraft({
+      startTimeIso: start.toISOString(),
+      endTimeIso: '',
+    });
+
+    timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
+
+    let cancelled = false;
+
+    (async () => {
+      if (!d.gpsEnabled) {
+        setGpsReady(true);
+        return;
+      }
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted' || cancelled) {
+        Alert.alert(
+          'Location permission',
+          'GPS distance needs location access. You can enter distance manually when you finish.',
+        );
+        updateLiveExpeditionDraft({ gpsEnabled: false });
+        setGpsTracks(false);
+        setGpsReady(true);
+        return;
+      }
+
+      const sub = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          distanceInterval: 4,
+          timeInterval: 800,
+        },
+        loc => {
+          const prev = lastFixRef.current;
+          if (prev) {
+            const delta = haversineMeters(prev.coords, loc.coords);
+            if (delta > 0.5 && delta < 5000) {
+              pathMetersRef.current += delta;
+              setDistanceMiles(metersToMiles(pathMetersRef.current));
+            }
           }
-          lastPositionRef.current = { lat: latitude, lon: longitude };
-        }
+          lastFixRef.current = loc;
+        },
       );
+      watchRef.current = sub;
+      setGpsReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+      if (timerRef.current) clearInterval(timerRef.current);
+      watchRef.current?.remove();
+    };
+  }, [router]);
+
+  async function openCamera() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Allow camera to capture trail photos.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPreviewUri(result.assets[0].uri);
     }
   }
 
-  async function endExpedition() {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    locationSubRef.current?.remove();
-    setRunning(false);
-    if (!currentUser || !startTime) return;
-
-    const durationSeconds = elapsed;
-    const finalDistance = distanceKm > 0 ? distanceKm : null;
-    const totalPoints = await calculateExpeditionPoints(1, finalDistance, true, 0);
-    const breakdown: PointsBreakdown = { base: totalPoints, new_species_bonus: 0, rare_bonus: 0, total: totalPoints };
-    const endTime = new Date();
-
-    await supabase.from('expeditions').insert({
-      user_id: currentUser.id,
-      title: `Live expedition — ${startTime.toLocaleDateString()}`,
-      type: 'hike',
-      is_live: true,
-      start_time: startTime.toISOString(),
-      end_time: endTime.toISOString(),
-      duration_seconds: durationSeconds,
-      distance: finalDistance ? Math.round(finalDistance * 10) / 10 : null,
-      vibe_tags: [],
-      photo_urls: [],
-      points_earned: totalPoints,
-    });
-
-    await awardPoints(currentUser.id, totalPoints);
-    setPointsBreakdown(breakdown);
-    setShowToast(true);
-    setTimeout(() => router.replace('/(tabs)'), 2500);
+  function keepPreview() {
+    if (previewUri) {
+      setPhotos(prev => [...prev, previewUri]);
+    }
+    setPreviewUri(null);
   }
 
-  function formatTime(secs: number) {
-    const h = Math.floor(secs / 3600);
-    const m = Math.floor((secs % 3600) / 60);
-    const s = secs % 60;
-    return `${h > 0 ? `${h}:` : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  function discardPreview() {
+    setPreviewUri(null);
   }
+
+  const draft = getLiveExpeditionDraft();
+  const locationTitle = draft?.locationLabel ?? 'Expedition';
+
+  const h = Math.floor(elapsed / 3600);
+  const m = Math.floor((elapsed % 3600) / 60);
+  const s = elapsed % 60;
+  const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#eaded0', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-      {pointsBreakdown ? <PointsToast points={pointsBreakdown} visible={showToast} /> : null}
+    <View style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
+      <View
+        style={{
+          backgroundColor: colors.redAccent,
+          paddingTop: insets.top,
+          paddingBottom: 12,
+          paddingHorizontal: 16,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: ff.crimsonBold,
+            fontSize: 17,
+            color: colors.bgPrimary,
+            textAlign: 'center',
+          }}
+          numberOfLines={2}
+        >
+          {locationTitle}
+        </Text>
+      </View>
 
-      <Icon name={running ? 'map-pin-simple' : 'person-simple-hike'} size={64} color="#361319" />
-      <Text style={{ fontSize: 20, fontWeight: '700', color: '#361319', marginTop: 8 }}>
-        {running ? 'Expedition in progress' : 'Ready to explore?'}
-      </Text>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
+        {!gpsReady ? (
+          <Text style={{ fontFamily: ff.crimson, color: colors.textMuted }}>Starting GPS…</Text>
+        ) : (
+          <>
+            <Text
+              style={{
+                fontFamily: ff.faustinaSemi,
+                fontSize: 44,
+                color: colors.blueAccent,
+                marginBottom: 8,
+              }}
+            >
+              {gpsTracks ? distanceMiles.toFixed(2) : '—'} mi
+            </Text>
+            <Text style={{ fontFamily: ff.crimson, fontSize: 14, color: colors.textMuted, marginBottom: 24 }}>
+              Distance
+            </Text>
+            <Text style={{ fontFamily: ff.faustinaSemi, fontSize: 40, color: colors.blueAccent }}>{timeStr}</Text>
+            <Text style={{ fontFamily: ff.crimson, fontSize: 14, color: colors.textMuted, marginTop: 8 }}>Time</Text>
+          </>
+        )}
+      </View>
 
-      {running ? (
-        <View style={{ marginVertical: 32, alignItems: 'center' }}>
-          <Text style={{ fontSize: 56, fontWeight: '800', color: '#4e705e' }}>
-            {formatTime(elapsed)}
-          </Text>
-          <Text style={{ fontSize: 14, color: '#6d3a3c', marginTop: 4 }}>time elapsed</Text>
-          <Text style={{ fontSize: 28, fontWeight: '700', color: '#4e705e', marginTop: 16 }}>
-            {distanceKm >= 1
-              ? `${distanceKm.toFixed(2)} km`
-              : `${Math.round(distanceKm * 1000)} m`}
-          </Text>
-          <Text style={{ fontSize: 14, color: '#6d3a3c', marginTop: 2 }}>distance covered</Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingBottom: insets.bottom + TAB_BAR_OFFSET,
+          gap: 28,
+        }}
+      >
+        <TouchableOpacity onPress={openCamera} activeOpacity={0.85} accessibilityLabel="Take photo">
+          <View
+            style={{
+              width: 88,
+              height: 88,
+              borderRadius: 44,
+              backgroundColor: colors.redAccent,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <View
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 36,
+                borderWidth: 3,
+                borderColor: colors.redAccent,
+                backgroundColor: 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <CameraIcon color={colors.bgAccent} size={34} />
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={finishStop}
+          style={{
+            backgroundColor: colors.redBase,
+            paddingHorizontal: 22,
+            paddingVertical: 16,
+            borderRadius: 16,
+            minWidth: 100,
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ fontFamily: ff.crimsonBold, fontSize: 17, color: colors.bgPrimary }}>Stop</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Modal visible={!!previewUri} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 24 }}>
+          {previewUri ? (
+            <Image source={{ uri: previewUri }} style={{ width: '100%', height: 320, borderRadius: 16 }} resizeMode="cover" />
+          ) : null}
+          <View style={{ flexDirection: 'row', gap: 16, marginTop: 20 }}>
+            <TouchableOpacity
+              onPress={discardPreview}
+              style={{ flex: 1, padding: 16, backgroundColor: colors.redBase, borderRadius: 14, alignItems: 'center' }}
+            >
+              <Text style={{ color: colors.bgPrimary, fontFamily: ff.crimsonBold }}>Discard</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={keepPreview}
+              style={{ flex: 1, padding: 16, backgroundColor: colors.greenBase, borderRadius: 14, alignItems: 'center' }}
+            >
+              <Text style={{ color: colors.bgPrimary, fontFamily: ff.crimsonBold }}>Use photo</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      ) : (
-        <View style={{ height: 60 }} />
-      )}
+      </Modal>
 
-      {!running ? (
-        <TouchableOpacity
-          onPress={startExpedition}
-          style={{ backgroundColor: '#4e705e', paddingHorizontal: 48, paddingVertical: 20, borderRadius: 40 }}
-        >
-          <Text style={{ color: '#eaded0', fontSize: 20, fontWeight: '800' }}>Start Expedition</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          onPress={endExpedition}
-          style={{ backgroundColor: '#6d3a3c', paddingHorizontal: 48, paddingVertical: 20, borderRadius: 40 }}
-        >
-          <Text style={{ color: '#eaded0', fontSize: 20, fontWeight: '800' }}>End Expedition</Text>
-        </TouchableOpacity>
-      )}
-
-      {!running ? (
-        <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 20 }}>
-          <Text style={{ color: '#110703', fontSize: 15, opacity: 0.5 }}>Cancel</Text>
-        </TouchableOpacity>
-      ) : null}
-    </SafeAreaView>
+      <Modal visible={manualDistanceOpen} transparent animationType="fade">
+        <View style={{ flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.45)', padding: 24 }}>
+          <View style={{ backgroundColor: colors.bgPrimary, borderRadius: 16, padding: 20 }}>
+            <Text style={{ fontFamily: ff.crimsonBold, fontSize: 18, color: colors.redAccent, marginBottom: 8 }}>
+              Distance hiked
+            </Text>
+            <Text style={{ fontFamily: ff.crimson, color: colors.textMuted, marginBottom: 12 }}>
+              GPS was off. Enter total miles for this hike.
+            </Text>
+            <TextInput
+              value={manualInput}
+              onChangeText={setManualInput}
+              placeholder="e.g. 3.25"
+              placeholderTextColor={colors.bgAccent}
+              keyboardType="decimal-pad"
+              style={{
+                borderWidth: 1,
+                borderColor: colors.bgAccent,
+                borderRadius: 12,
+                padding: 14,
+                fontFamily: ff.crimson,
+                fontSize: 18,
+                color: colors.textPrimary,
+                marginBottom: 16,
+              }}
+            />
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setManualDistanceOpen(false);
+                  setManualInput('');
+                }}
+                style={{ flex: 1, padding: 14, borderRadius: 12, backgroundColor: colors.bgAccent, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: ff.crimsonBold, color: colors.redAccent }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={confirmManualDistance}
+                style={{ flex: 1, padding: 14, borderRadius: 12, backgroundColor: colors.greenBase, alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: ff.crimsonBold, color: colors.bgPrimary }}>Continue</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }

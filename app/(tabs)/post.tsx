@@ -52,7 +52,7 @@ export default function PostScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push('/expedition/live')}
+          onPress={() => router.push('/expedition/setup')}
           style={{ backgroundColor: colors.redAccent, borderRadius: 20, padding: 24, alignItems: 'center', gap: 8 }}
         >
           <Icon name="map-pin-simple" size={40} color={colors.tabIconActive} />
