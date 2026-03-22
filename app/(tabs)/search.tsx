@@ -9,6 +9,7 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { useDiscoveries } from '../../src/hooks/useDiscoveries';
 import { useExpeditions } from '../../src/hooks/useExpeditions';
 import { useViewerFollowingIds } from '../../src/hooks/useFollows';
+import { hrefUserProfile } from '../../src/lib/routes';
 import { supabase } from '../../src/lib/supabase';
 import { colors } from '../../src/theme/colors';
 import { ff, textStyles } from '../../src/theme/typography';
@@ -181,7 +182,7 @@ export default function SearchScreen() {
             <UserResultRow
               key={u.id}
               user={u}
-              onPress={() => router.push({ pathname: '/user/[id]/index', params: { id: u.id } })}
+              onPress={() => router.push(hrefUserProfile(u.id))}
             />
           ))}
         </View>

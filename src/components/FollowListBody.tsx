@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { hrefUserProfile } from '../lib/routes';
 import { colors } from '../theme/colors';
 import { ff, textStyles } from '../theme/typography';
 import { User } from '../types';
@@ -90,7 +91,7 @@ export function FollowListBody({ users, loading, emptyHint, separatorHorizontalI
         renderItem={({ item }) => (
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => router.push({ pathname: '/user/[id]/index', params: { id: item.id } })}
+            onPress={() => router.push(hrefUserProfile(item.id))}
             style={{
               flexDirection: 'row',
               alignItems: 'center',

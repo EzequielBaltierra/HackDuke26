@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { hrefUserProfile } from '../lib/routes';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import {
   FeedBadgeShields,
@@ -34,9 +35,7 @@ export function ExpeditionCard({ expedition, viewerUserId, followingIds, onToggl
 
   const showFooter = Boolean(distanceStr || durationStr || expedition.points_earned > 0);
 
-  const goUser = authorId
-    ? () => router.push({ pathname: '/user/[id]/index', params: { id: authorId } })
-    : undefined;
+  const goUser = authorId ? () => router.push(hrefUserProfile(authorId)) : undefined;
 
   return (
     <View

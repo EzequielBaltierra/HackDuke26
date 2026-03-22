@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { fetchLeaderboard } from '../../src/hooks/useProfile';
+import { hrefUserProfile } from '../../src/lib/routes';
 import { useAuth } from '../../src/hooks/useAuth';
 import { colors } from '../../src/theme/colors';
 import { ff, textStyles } from '../../src/theme/typography';
@@ -195,7 +196,7 @@ export default function LeaderboardScreen() {
           return (
             <TouchableOpacity
               activeOpacity={0.75}
-              onPress={() => router.push({ pathname: '/user/[id]/index', params: { id: item.id } })}
+              onPress={() => router.push(hrefUserProfile(item.id))}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
