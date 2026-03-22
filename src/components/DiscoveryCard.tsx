@@ -52,22 +52,21 @@ export function DiscoveryCard({ discovery }: Props) {
         elevation: 3,
       }}
     >
-      <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
-        <View style={{ padding: 16, paddingBottom: 10 }}>
-          <FeedUserRow user={discovery.users} />
+      {/* User row — plain View so inner TouchableOpacity works */}
+      <View style={{ padding: 16, paddingBottom: 0 }}>
+        <FeedUserRow
+          user={discovery.users}
+          onPressUser={discovery.users?.id ? () => router.push(`/user/${discovery.users!.id}`) : undefined}
+        />
+      </View>
 
+      {/* Card body — taps open detail */}
+      <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
+        <View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
           <Text style={[textStyles.postTitle, { marginBottom: 4 }]}>{discovery.common_name}</Text>
 
           {discovery.scientific_name ? (
-            <Text
-              style={{
-                fontFamily: textStyles.postDescription.fontFamily,
-                fontSize: 15,
-                color: colors.redBase,
-                fontStyle: 'italic',
-                marginBottom: 6,
-              }}
-            >
+            <Text style={{ fontFamily: textStyles.postDescription.fontFamily, fontSize: 15, color: colors.redBase, fontStyle: 'italic', marginBottom: 6 }}>
               {discovery.scientific_name}
             </Text>
           ) : null}
@@ -75,16 +74,7 @@ export function DiscoveryCard({ discovery }: Props) {
           <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{discoveryLocationLine(discovery)}</Text>
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-            <View
-              style={{
-                borderRadius: 20,
-                paddingHorizontal: 12,
-                paddingVertical: 5,
-                backgroundColor: colors.bgAccent,
-                borderWidth: 1,
-                borderColor: colors.redBase,
-              }}
-            >
+            <View style={{ borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: colors.bgAccent, borderWidth: 1, borderColor: colors.redBase }}>
               <Text style={textStyles.vibeTag}>{categoryLabel[discovery.category] ?? discovery.category}</Text>
             </View>
           </View>
