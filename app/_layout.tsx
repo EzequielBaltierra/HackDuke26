@@ -1,4 +1,4 @@
-import { Slot } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import { AuthProvider } from '../src/contexts/AuthContext';
@@ -19,7 +19,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <StatusBar style="dark" />
-      <Slot />
+      <Stack screenOptions={{ headerShown: false, gestureEnabled: true }} />
     </AuthProvider>
   );
 }
