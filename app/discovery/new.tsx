@@ -86,6 +86,16 @@ export default function NewDiscoveryScreen() {
       Alert.alert('Not ready', 'Missing image, scan result, or user session.');
       return;
     }
+
+    if (result.is_nature === false) {
+      Alert.alert(
+        'Not a nature subject',
+        result.rejection_reason ?? 'Only wild plants, animals, and fungi can be posted as discoveries.',
+        [{ text: 'Try again', onPress: () => setStep('pick') }]
+      );
+      return;
+    }
+
     setStep('posting');
 
     try {
@@ -112,11 +122,8 @@ export default function NewDiscoveryScreen() {
         }
       } catch {}
 
-      const isNature = result.is_nature !== false;
       const speciesKey = result.scientific_name || result.common_name;
-      const breakdown = isNature
-        ? await calculateDiscoveryPoints(currentUser.id, speciesKey, result.is_rare)
-        : { base: 0, new_species_bonus: 0, rare_bonus: 0, total: 0 };
+      const breakdown = await calculateDiscoveryPoints(currentUser.id, speciesKey, result.is_rare);
       setPointsBreakdown(breakdown);
 
       await supabase.from('discoveries').insert({
@@ -134,16 +141,14 @@ export default function NewDiscoveryScreen() {
         points_earned: breakdown.total,
       });
 
-      if (isNature) {
-        await Promise.all([
-          awardPoints(currentUser.id, breakdown.total),
-          trackSpecies(currentUser.id, speciesKey),
-          checkAndAwardBadges(currentUser.id),
-        ]);
-      }
+      await Promise.all([
+        awardPoints(currentUser.id, breakdown.total),
+        trackSpecies(currentUser.id, speciesKey),
+        checkAndAwardBadges(currentUser.id),
+      ]);
 
       setStep('done');
-      setShowToast(isNature);
+      setShowToast(true);
       setTimeout(() => router.replace('/(tabs)'), 2500);
     } catch (err: any) {
       console.error('[postDiscovery error]', err);
@@ -189,9 +194,9 @@ export default function NewDiscoveryScreen() {
           {imageUri ? <Image source={{ uri: imageUri }} style={{ width: '100%', height: 260 }} resizeMode="cover" /> : null}
           {!isNature ? (
             <View style={{ margin: 16, backgroundColor: '#6d3a3c', borderRadius: 14, padding: 16 }}>
-              <Text style={{ fontSize: 16, fontWeight: '800', color: '#eaded0', marginBottom: 4 }}>⚠️ No points awarded</Text>
+              <Text style={{ fontSize: 16, fontWeight: '800', color: '#eaded0', marginBottom: 4 }}>⚠️ Not a nature subject</Text>
               <Text style={{ fontSize: 14, color: '#c7af94' }}>
-                {result.rejection_reason ?? 'This doesn\'t appear to be a wild plant, animal, or fungi. Only nature discoveries earn points!'}
+                {result.rejection_reason ?? 'Only wild plants, animals, and fungi can be posted as discoveries.'}
               </Text>
             </View>
           ) : null}
@@ -220,9 +225,15 @@ export default function NewDiscoveryScreen() {
               }}
               multiline
             />
-            <TouchableOpacity onPress={postDiscovery} style={{ backgroundColor: '#4e705e', padding: 18, borderRadius: 16, alignItems: 'center' }}>
-              <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>Post Discovery ✨</Text>
-            </TouchableOpacity>
+            {isNature ? (
+              <TouchableOpacity onPress={postDiscovery} style={{ backgroundColor: '#4e705e', padding: 18, borderRadius: 16, alignItems: 'center' }}>
+                <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>Post Discovery ✨</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={() => setStep('pick')} style={{ backgroundColor: '#6d3a3c', padding: 18, borderRadius: 16, alignItems: 'center' }}>
+                <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>Try a Different Photo</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity onPress={() => setStep('pick')} style={{ marginTop: 12, alignItems: 'center' }}>
               <Text style={{ color: '#110703', fontSize: 15, opacity: 0.5 }}>Retake photo</Text>
             </TouchableOpacity>
@@ -244,15 +255,11 @@ export default function NewDiscoveryScreen() {
           </>
         ) : (
           <>
-            <Text style={{ fontSize: 48 }}>{pointsBreakdown && pointsBreakdown.total > 0 ? '🌿' : '📷'}</Text>
+            <Text style={{ fontSize: 48 }}>🌿</Text>
             <Text style={{ fontSize: 22, fontWeight: '700', color: '#4e705e' }}>Discovery Posted!</Text>
-            {pointsBreakdown && pointsBreakdown.total > 0 ? (
+            {pointsBreakdown ? (
               <Text style={{ fontSize: 16, color: '#6d3a3c' }}>+{pointsBreakdown.total} points earned</Text>
-            ) : (
-              <Text style={{ fontSize: 14, color: '#6d3a3c', textAlign: 'center', paddingHorizontal: 32 }}>
-                No points — next time try spotting a wild plant, animal, or fungi!
-              </Text>
-            )}
+            ) : null}
           </>
         )}
       </SafeAreaView>
