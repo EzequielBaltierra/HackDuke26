@@ -247,8 +247,8 @@ export default function NewExpeditionScreen() {
         <TextInput value={location} onChangeText={setLocation} placeholder="e.g. Eno River State Park"
           placeholderTextColor="#c7af94" style={inputStyle} />
 
-        <Label>Distance (km)</Label>
-        <TextInput value={distance} onChangeText={setDistance} placeholder="e.g. 5.2"
+        <Label>Distance (miles)</Label>
+        <TextInput value={distance} onChangeText={setDistance} placeholder="e.g. 3.1"
           placeholderTextColor="#c7af94" keyboardType="numeric" style={inputStyle} />
 
         <Label>Vibes</Label>
