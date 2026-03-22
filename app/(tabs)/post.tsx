@@ -44,7 +44,7 @@ export default function PostScreen() {
             borderColor: colors.greenAccent,
           }}
         >
-          <Icon name="footprints" size={40} color={colors.tabIconActive} />
+          <Icon name="person-simple-hike" size={40} color={colors.tabIconActive} />
           <Text style={[textStyles.postTitle, { color: colors.tabIconActive, fontSize: 22 }]}>Expedition</Text>
           <Text style={[textStyles.postDescription, { color: colors.bgAccent, fontSize: 14, textAlign: 'center' }]}>
             Log a hike, trail, or nature walk

@@ -134,7 +134,7 @@ export default function PublicProfileScreen() {
           {/* Rank badge + progress */}
           <View style={{ alignItems: 'center', marginTop: 10, marginBottom: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: rank.color, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, marginBottom: 8 }}>
-              <Text style={{ fontSize: 16 }}>{rank.emoji}</Text>
+              <Icon name={rank.iconName as any} size={18} color="#eaded0" />
               <Text style={{ fontSize: 15, fontWeight: '800', color: '#eaded0', letterSpacing: 0.5 }}>{rank.name}</Text>
             </View>
             <View style={{ width: 180, height: 6, backgroundColor: colors.bgAccent, borderRadius: 3, overflow: 'hidden' }}>
@@ -208,7 +208,7 @@ export default function PublicProfileScreen() {
             { iconName: 'star' as const, value: user.total_points.toLocaleString(), label: 'Points' },
             { iconName: 'campfire' as const, value: `${user.streak}d`, label: 'Streak' },
             { iconName: 'magnifying-glass' as const, value: discoveries.length.toString(), label: 'Spots' },
-            { iconName: 'footprints' as const, value: expeditions.length.toString(), label: 'Trips' },
+            { iconName: 'person-simple-hike' as const, value: expeditions.length.toString(), label: 'Trips' },
           ].map(({ iconName, value, label }) => (
             <View key={label} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 14, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.bgAccent }}>
               <Icon name={iconName} size={22} color={colors.greenBase} />

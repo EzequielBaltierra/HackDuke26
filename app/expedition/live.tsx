@@ -106,7 +106,7 @@ export default function LiveExpeditionScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#eaded0', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
       {pointsBreakdown ? <PointsToast points={pointsBreakdown} visible={showToast} /> : null}
 
-      <Icon name={running ? 'map-pin-simple' : 'footprints'} size={64} color="#361319" />
+      <Icon name={running ? 'map-pin-simple' : 'person-simple-hike'} size={64} color="#361319" />
       <Text style={{ fontSize: 20, fontWeight: '700', color: '#361319', marginTop: 8 }}>
         {running ? 'Expedition in progress' : 'Ready to explore?'}
       </Text>

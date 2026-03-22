@@ -166,7 +166,7 @@ export default function NewDiscoveryScreen() {
           <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>Take Photo</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={pickImage} style={{ backgroundColor: '#6d3a3c', padding: 18, borderRadius: 16, width: '100%', alignItems: 'center' }}>
-          <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>🖼 Choose from Library</Text>
+          <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>Choose from Library</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 8 }}>
           <Text style={{ color: '#110703', fontSize: 16, opacity: 0.5 }}>Cancel</Text>
