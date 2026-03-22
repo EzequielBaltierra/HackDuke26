@@ -24,7 +24,7 @@ type Props = {
 };
 
 const NOMINATIM_HEADERS = {
-  'User-Agent': 'Root-HackDuke/1.0',
+  'User-Agent': 'Forage-HackDuke/1.0',
   'Accept-Language': 'en',
 };
 

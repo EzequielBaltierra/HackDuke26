@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "Root",
-    "slug": "root",
+    "name": "Forage",
+    "slug": "forage",
     "version": "1.0.0",
-    "scheme": "com.root.app",
+    "scheme": "com.forage.app",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
@@ -11,13 +11,13 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.root.app"
+      "bundleIdentifier": "com.forage.app"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#4e705e"
       },
-      "package": "com.root.app"
+      "package": "com.forage.app"
     },
     "plugins": [
       "expo-router",
@@ -25,7 +25,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Root uses your location to tag discoveries and expeditions."
+          "locationWhenInUsePermission": "Forage uses your location to tag discoveries and expeditions."
         }
       ],
       "expo-secure-store",
@@ -33,8 +33,8 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "Root saves expedition photos you choose to your library.",
-          "savePhotosPermission": "Root saves expedition photos you choose to your library."
+          "photosPermission": "Forage saves expedition photos you choose to your library.",
+          "savePhotosPermission": "Forage saves expedition photos you choose to your library."
         }
       ]
     ],

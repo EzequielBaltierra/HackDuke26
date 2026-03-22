@@ -25,7 +25,7 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
       <Text style={[type.titleHeaderAccent, { fontSize: 56, marginBottom: 4, letterSpacing: -1, textAlign: 'center' }]}>
-        Root
+        Forage
       </Text>
       <Text style={{ fontFamily: fontFamily.crimson, fontSize: 18, color: colors.red, marginBottom: 8, fontStyle: 'italic' }}>
         Expedition · Discovery

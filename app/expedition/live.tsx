@@ -151,7 +151,7 @@ export default function LiveExpeditionScreen() {
             });
             fetch(
               `https://nominatim.openstreetmap.org/reverse?lat=${loc.coords.latitude}&lon=${loc.coords.longitude}&format=json`,
-              { headers: { 'User-Agent': 'Root-HackDuke/1.0' } }
+              { headers: { 'User-Agent': 'Forage-HackDuke/1.0' } }
             )
               .then(r => r.json())
               .then(data => {

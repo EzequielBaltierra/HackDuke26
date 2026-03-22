@@ -57,7 +57,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'com.root.app', path: 'callback' });
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'com.forage.app', path: 'callback' });
   console.log('[Auth] redirectUri =', redirectUri); // Add this exact URL to Auth0 Allowed Callback URLs
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(

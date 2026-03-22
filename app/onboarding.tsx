@@ -10,7 +10,7 @@ const { width } = Dimensions.get('window');
 const SLIDES: { iconName: IconName; title: string; body: string }[] = [
   {
     iconName: 'clover',
-    title: 'Welcome to Root',
+    title: 'Welcome to Forage',
     body: 'Explore nature, identify species with AI, and earn points for every discovery you make.',
   },
   {
@@ -21,7 +21,7 @@ const SLIDES: { iconName: IconName; title: string; body: string }[] = [
   {
     iconName: 'person-simple-hike',
     title: 'Log Expeditions',
-    body: 'Track your outdoor hikes and nature walks. Start a live expedition and let Root record your distance automatically.',
+    body: 'Track your outdoor hikes and nature walks. Start a live expedition and let Forage record your distance automatically.',
   },
   {
     iconName: 'trophy',
