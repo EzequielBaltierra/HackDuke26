@@ -13,11 +13,30 @@ import { supabase } from '../../src/lib/supabase';
 import { Badge, Discovery, Expedition, User } from '../../src/types';
 
 const BADGE_LABELS: Record<string, string> = {
+  // Existing
   first_discovery: '🌿 First Discovery',
   trailblazer: '🥾 Trailblazer',
   explorer: '⛰ Explorer',
   rare_finder: '🌟 Rare Finder',
+  // Discovery-based
+  botanist: '🌿 Botanist',
+  entomologist: '🦋 Entomologist',
+  fungi_hunter: '🍄 Fungi Hunter',
+  collector: '📚 Collector',
+  naturalist: '🌎 Naturalist',
+  // Expedition-based
+  summit_seeker: '🏔️ Summit Seeker',
+  long_hauler: '🚶 Long Hauler',
+  weekend_warrior: '🌅 Weekend Warrior',
+  trailhead: '🗺️ Trailhead',
+  // Social
   social_explorer: '👥 Social Explorer',
+  trail_buddy: '🤝 Trail Buddy',
+  // Streaks
+  on_a_roll: '🔥 On a Roll',
+  unstoppable: '⚡ Unstoppable',
+  // Fun
+  night_owl: '🌙 Night Owl',
 };
 
 type Profile = {

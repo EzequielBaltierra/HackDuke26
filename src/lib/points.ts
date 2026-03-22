@@ -73,18 +73,19 @@ export async function trackSpecies(userId: string, speciesKey: string): Promise<
 }
 
 const BADGE_RULES: { type: string; check: (userId: string) => Promise<boolean> }[] = [
+  // --- Existing ---
   {
     type: 'first_discovery',
     check: async (userId) => {
       const { count } = await supabase.from('discoveries').select('id', { count: 'exact' }).eq('user_id', userId);
-      return (count ?? 0) === 1;
+      return (count ?? 0) >= 1;
     },
   },
   {
     type: 'trailblazer',
     check: async (userId) => {
       const { count } = await supabase.from('expeditions').select('id', { count: 'exact' }).eq('user_id', userId);
-      return (count ?? 0) === 1;
+      return (count ?? 0) >= 1;
     },
   },
   {
@@ -99,6 +100,124 @@ const BADGE_RULES: { type: string; check: (userId: string) => Promise<boolean> }
     check: async (userId) => {
       const { count } = await supabase.from('discoveries').select('id', { count: 'exact' }).eq('user_id', userId).eq('is_sensitive', true);
       return (count ?? 0) >= 1;
+    },
+  },
+
+  // --- Discovery-based ---
+  {
+    type: 'botanist',
+    check: async (userId) => {
+      const { data } = await supabase.from('discoveries').select('common_name').eq('user_id', userId).ilike('category', '%plant%');
+      const unique = new Set((data ?? []).map(d => d.common_name));
+      return unique.size >= 5;
+    },
+  },
+  {
+    type: 'entomologist',
+    check: async (userId) => {
+      const { data } = await supabase.from('discoveries').select('common_name').eq('user_id', userId).ilike('category', '%insect%');
+      const unique = new Set((data ?? []).map(d => d.common_name));
+      return unique.size >= 3;
+    },
+  },
+  {
+    type: 'fungi_hunter',
+    check: async (userId) => {
+      const { count } = await supabase.from('discoveries').select('id', { count: 'exact' }).eq('user_id', userId).ilike('category', '%fung%');
+      return (count ?? 0) >= 1;
+    },
+  },
+  {
+    type: 'collector',
+    check: async (userId) => {
+      const { count } = await supabase.from('discoveries').select('id', { count: 'exact' }).eq('user_id', userId);
+      return (count ?? 0) >= 10;
+    },
+  },
+  {
+    type: 'naturalist',
+    check: async (userId) => {
+      const { count } = await supabase.from('discoveries').select('id', { count: 'exact' }).eq('user_id', userId);
+      return (count ?? 0) >= 25;
+    },
+  },
+
+  // --- Expedition-based ---
+  {
+    type: 'summit_seeker',
+    check: async (userId) => {
+      const { count } = await supabase.from('expeditions').select('id', { count: 'exact' }).eq('user_id', userId).eq('difficulty', 'hard');
+      return (count ?? 0) >= 1;
+    },
+  },
+  {
+    type: 'long_hauler',
+    check: async (userId) => {
+      const { count } = await supabase.from('expeditions').select('id', { count: 'exact' }).eq('user_id', userId).gte('distance', 16);
+      return (count ?? 0) >= 1;
+    },
+  },
+  {
+    type: 'weekend_warrior',
+    check: async (userId) => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { count } = await supabase.from('expeditions').select('id', { count: 'exact' }).eq('user_id', userId).gte('created_at', sevenDaysAgo);
+      return (count ?? 0) >= 3;
+    },
+  },
+  {
+    type: 'trailhead',
+    check: async (userId) => {
+      const { data } = await supabase.from('expeditions').select('location').eq('user_id', userId).not('location', 'is', null);
+      const unique = new Set((data ?? []).map(e => e.location?.toLowerCase().trim()).filter(Boolean));
+      return unique.size >= 3;
+    },
+  },
+
+  // --- Social ---
+  {
+    type: 'social_explorer',
+    check: async (userId) => {
+      const { data: myExpeditions } = await supabase.from('expeditions').select('id').eq('user_id', userId);
+      if (!myExpeditions || myExpeditions.length === 0) return false;
+      const ids = myExpeditions.map(e => e.id);
+      const { count } = await supabase.from('expedition_participants').select('id', { count: 'exact' }).in('expedition_id', ids);
+      return (count ?? 0) >= 1;
+    },
+  },
+  {
+    type: 'trail_buddy',
+    check: async (userId) => {
+      const { data: participations } = await supabase.from('expedition_participants').select('expedition_id').eq('user_id', userId);
+      if (!participations || participations.length === 0) return false;
+      const ids = participations.map(p => p.expedition_id);
+      const { count } = await supabase.from('expeditions').select('id', { count: 'exact' }).in('id', ids).neq('user_id', userId);
+      return (count ?? 0) >= 1;
+    },
+  },
+
+  // --- Streaks ---
+  {
+    type: 'on_a_roll',
+    check: async (userId) => {
+      const { data } = await supabase.from('users').select('streak').eq('id', userId).single();
+      return (data?.streak ?? 0) >= 3;
+    },
+  },
+  {
+    type: 'unstoppable',
+    check: async (userId) => {
+      const { data } = await supabase.from('users').select('streak').eq('id', userId).single();
+      return (data?.streak ?? 0) >= 7;
+    },
+  },
+
+  // --- Fun ---
+  {
+    type: 'night_owl',
+    check: async (userId) => {
+      const { data } = await supabase.from('discoveries').select('created_at').eq('user_id', userId);
+      return (data ?? []).some(d => new Date(d.created_at).getHours() >= 21);
     },
   },
 ];

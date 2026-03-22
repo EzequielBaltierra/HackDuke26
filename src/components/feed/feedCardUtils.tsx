@@ -73,52 +73,52 @@ export function FeedAvatar({ user }: { user: User | undefined }) {
 
 export function FeedUserRow({
   user,
+  onPressUser,
   onPressFollow,
 }: {
   user: User | undefined;
+  onPressUser?: () => void;
   onPressFollow?: () => void;
 }) {
   const name = user?.username ?? 'Explorer';
   const pts = (user?.total_points ?? 0).toLocaleString();
 
+  const UserInfo = (
+    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', minWidth: 0, paddingRight: 4 }}>
+      <FeedAvatar user={user} />
+      <View style={{ flex: 1 }}>
+        <Text style={[textStyles.userName, { flexShrink: 1 }]} numberOfLines={1}>{name}</Text>
+        <Text style={[textStyles.userPoints, { flexShrink: 0 }]}>{pts} pts</Text>
+      </View>
+    </View>
+  );
+
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-      <FeedAvatar user={user} />
-      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', minWidth: 0, paddingRight: 4 }}>
-        <Text style={[textStyles.userName, { flexShrink: 1 }]} numberOfLines={1}>
-          {name}
-        </Text>
-        <Text style={[textStyles.userPoints, { marginLeft: 8, flexShrink: 0 }]}>{pts} pts</Text>
-      </View>
-      <TouchableOpacity
-        onPress={onPressFollow ?? (() => {})}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-        accessibilityRole="button"
-        accessibilityLabel="Follow"
-      >
-        <View
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 15,
-            borderWidth: 2,
-            borderColor: colors.redAccent,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
+      {onPressUser ? (
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={onPressUser}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 0, right: 0 }}
         >
-          <Text
-            style={{
-              fontSize: 20,
-              color: colors.redAccent,
-              marginTop: -2,
-              fontFamily: textStyles.postTitle.fontFamily,
-            }}
-          >
-            +
-          </Text>
-        </View>
-      </TouchableOpacity>
+          {UserInfo}
+        </TouchableOpacity>
+      ) : (
+        <View style={{ flex: 1 }}>{UserInfo}</View>
+      )}
+      {onPressFollow ? (
+        <TouchableOpacity
+          onPress={onPressFollow}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityRole="button"
+          accessibilityLabel="Follow"
+        >
+          <View style={{ width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: colors.redAccent, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontSize: 20, color: colors.redAccent, marginTop: -2, fontFamily: textStyles.postTitle.fontFamily }}>+</Text>
+          </View>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }

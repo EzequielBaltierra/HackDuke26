@@ -43,10 +43,17 @@ export function ExpeditionCard({ expedition }: Props) {
         elevation: 3,
       }}
     >
-      <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
-        <View style={{ padding: 16, paddingBottom: 10 }}>
-          <FeedUserRow user={expedition.users} />
+      {/* User row — plain View so inner TouchableOpacity works */}
+      <View style={{ padding: 16, paddingBottom: 0 }}>
+        <FeedUserRow
+          user={expedition.users}
+          onPressUser={expedition.users?.id ? () => router.push(`/user/${expedition.users!.id}`) : undefined}
+        />
+      </View>
 
+      {/* Card body — taps open detail */}
+      <TouchableOpacity activeOpacity={0.95} onPress={openDetail}>
+        <View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
           <Text style={[textStyles.postTitle, { marginBottom: 6 }]}>{expedition.title}</Text>
 
           <Text style={[textStyles.postLocation, { marginBottom: 10 }]}>{locationLine}</Text>
@@ -54,17 +61,7 @@ export function ExpeditionCard({ expedition }: Props) {
           {expedition.vibe_tags?.length > 0 ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
               {expedition.vibe_tags.slice(0, 6).map(tag => (
-                <View
-                  key={tag}
-                  style={{
-                    borderRadius: 20,
-                    paddingHorizontal: 12,
-                    paddingVertical: 5,
-                    backgroundColor: colors.bgAccent,
-                    borderWidth: 1,
-                    borderColor: colors.redBase,
-                  }}
-                >
+                <View key={tag} style={{ borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: colors.bgAccent, borderWidth: 1, borderColor: colors.redBase }}>
                   <Text style={textStyles.vibeTag}>{tag}</Text>
                 </View>
               ))}
