@@ -101,7 +101,7 @@ export function ExpeditionCard({ expedition }: Props) {
           {photos.length > 1 ? (
             <>
               <TouchableOpacity
-                onPress={() => setPhotoIndex(i => Math.max(0, i - 1))}
+                onPress={() => setPhotoIndex(i => (i - 1 + photos.length) % photos.length)}
                 style={{
                   position: 'absolute',
                   left: 12,
@@ -118,7 +118,7 @@ export function ExpeditionCard({ expedition }: Props) {
                 <Text style={{ color: colors.tabIconActive, fontSize: 22, marginTop: -2 }}>‹</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => setPhotoIndex(i => Math.min(photos.length - 1, i + 1))}
+                onPress={() => setPhotoIndex(i => (i + 1) % photos.length)}
                 style={{
                   position: 'absolute',
                   right: 12,
@@ -134,6 +134,31 @@ export function ExpeditionCard({ expedition }: Props) {
               >
                 <Text style={{ color: colors.tabIconActive, fontSize: 22, marginTop: -2 }}>›</Text>
               </TouchableOpacity>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 10,
+                  left: 0,
+                  right: 0,
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  gap: 6,
+                }}
+              >
+                {photos.map((_, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      width: i === photoIndex ? 18 : 7,
+                      height: 7,
+                      borderRadius: 4,
+                      backgroundColor: i === photoIndex
+                        ? colors.tabIconActive
+                        : 'rgba(234,222,208,0.5)',
+                    }}
+                  />
+                ))}
+              </View>
             </>
           ) : null}
         </View>
