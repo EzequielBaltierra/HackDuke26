@@ -187,16 +187,49 @@ export default function NewDiscoveryScreen() {
 
   if (step === 'review' && result) {
     const isNature = result.is_nature !== false;
+    const noMatch = result.confidence === 0;
+    const lowConfidence = isNature && result.confidence > 0 && result.confidence < 0.4;
+    const rejected = !isNature || noMatch;
+
+    // Full rejection screen — no fact card shown
+    if (rejected) {
+      const message = !isNature
+        ? (result.rejection_reason ?? 'Only wild plants, animals, and fungi can be posted as discoveries.')
+        : 'The AI couldn\'t identify any species in this photo. Try a clearer, closer shot of the subject.';
+      return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#eaded0', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          {imageUri ? (
+            <Image source={{ uri: imageUri }} style={{ width: '100%', height: 220, borderRadius: 16, marginBottom: 24 }} resizeMode="cover" />
+          ) : null}
+          <View style={{ backgroundColor: '#6d3a3c', borderRadius: 16, padding: 20, width: '100%', marginBottom: 24 }}>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: '#eaded0', marginBottom: 8 }}>
+              {noMatch ? '🔍 No match found' : '⚠️ Not a nature subject'}
+            </Text>
+            <Text style={{ fontSize: 15, color: '#c7af94', lineHeight: 22 }}>{message}</Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => setStep('pick')}
+            style={{ backgroundColor: '#4e705e', padding: 16, borderRadius: 14, width: '100%', alignItems: 'center', marginBottom: 12 }}
+          >
+            <Text style={{ color: '#eaded0', fontSize: 16, fontWeight: '700' }}>📷 Try a Different Photo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={{ color: '#110703', fontSize: 15, opacity: 0.5 }}>Cancel</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      );
+    }
+
+    // Normal review screen with fact card
     return (
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }} keyboardShouldPersistTaps="handled">
         <SafeAreaView>
           {imageUri ? <Image source={{ uri: imageUri }} style={{ width: '100%', height: 260 }} resizeMode="cover" /> : null}
-          {!isNature ? (
-            <View style={{ margin: 16, backgroundColor: '#6d3a3c', borderRadius: 14, padding: 16 }}>
-              <Text style={{ fontSize: 16, fontWeight: '800', color: '#eaded0', marginBottom: 4 }}>⚠️ Not a nature subject</Text>
-              <Text style={{ fontSize: 14, color: '#c7af94' }}>
-                {result.rejection_reason ?? 'Only wild plants, animals, and fungi can be posted as discoveries.'}
+          {lowConfidence ? (
+            <View style={{ margin: 16, backgroundColor: '#c7af94', borderRadius: 14, padding: 14 }}>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: '#361319' }}>
+                🔍 Low confidence match — double-check the species before posting.
               </Text>
             </View>
           ) : null}
@@ -225,15 +258,9 @@ export default function NewDiscoveryScreen() {
               }}
               multiline
             />
-            {isNature ? (
-              <TouchableOpacity onPress={postDiscovery} style={{ backgroundColor: '#4e705e', padding: 18, borderRadius: 16, alignItems: 'center' }}>
-                <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>Post Discovery ✨</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity onPress={() => setStep('pick')} style={{ backgroundColor: '#6d3a3c', padding: 18, borderRadius: 16, alignItems: 'center' }}>
-                <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>Try a Different Photo</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity onPress={postDiscovery} style={{ backgroundColor: '#4e705e', padding: 18, borderRadius: 16, alignItems: 'center' }}>
+              <Text style={{ color: '#eaded0', fontSize: 18, fontWeight: '700' }}>Post Discovery ✨</Text>
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => setStep('pick')} style={{ marginTop: 12, alignItems: 'center' }}>
               <Text style={{ color: '#110703', fontSize: 15, opacity: 0.5 }}>Retake photo</Text>
             </TouchableOpacity>
