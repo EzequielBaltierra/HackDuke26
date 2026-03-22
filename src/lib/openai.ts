@@ -7,10 +7,12 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true,
 });
 
-const IDENTIFICATION_PROMPT = `You are an expert naturalist and ecologist. Analyze this image and identify the species or organism shown.
+const IDENTIFICATION_PROMPT = `You are an expert naturalist and ecologist. Analyze this image and determine if it shows a nature subject (plant, tree, flower, fungi, insect, bird, mammal, reptile, amphibian, or other wild organism).
 
 Return ONLY a valid JSON object (no markdown, no extra text) with this exact shape:
 {
+  "is_nature": boolean — true only if the image primarily shows a wild plant, animal, fungi, or other natural organism. False for humans, pets in domestic settings, man-made objects, food, screens, vehicles, buildings, etc.,
+  "rejection_reason": string or null — if is_nature is false, a short friendly explanation of why this doesn't qualify (e.g. "This looks like a water bottle, not a wild species."). null if is_nature is true.,
   "common_name": "string — common name of the species",
   "scientific_name": "string — binomial scientific name",
   "category": "one of: plants, trees, flowers, fungi, insects, birds, mammals, other",
@@ -26,7 +28,7 @@ Return ONLY a valid JSON object (no markdown, no extra text) with this exact sha
   }
 }
 
-If you cannot identify a specific species, use your best guess with a low confidence score. Always return valid JSON.`;
+If is_nature is false, still fill in the other fields with your best guess but set confidence to 0. Always return valid JSON.`;
 
 export async function identifySpecies(imageUri: string): Promise<AIIdentificationResult> {
   const base64 = await FileSystem.readAsStringAsync(imageUri, {

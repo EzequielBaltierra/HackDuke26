@@ -75,6 +75,8 @@ export type AIIdentificationResult = {
   category: Discovery['category'];
   confidence: number;
   is_rare: boolean;
+  is_nature: boolean;
+  rejection_reason: string | null;
   fact_card: FactCard;
 };
 

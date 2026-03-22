@@ -112,8 +112,11 @@ export default function NewDiscoveryScreen() {
         }
       } catch {}
 
+      const isNature = result.is_nature !== false;
       const speciesKey = result.scientific_name || result.common_name;
-      const breakdown = await calculateDiscoveryPoints(currentUser.id, speciesKey, result.is_rare);
+      const breakdown = isNature
+        ? await calculateDiscoveryPoints(currentUser.id, speciesKey, result.is_rare)
+        : { base: 0, new_species_bonus: 0, rare_bonus: 0, total: 0 };
       setPointsBreakdown(breakdown);
 
       await supabase.from('discoveries').insert({
@@ -131,14 +134,16 @@ export default function NewDiscoveryScreen() {
         points_earned: breakdown.total,
       });
 
-      await Promise.all([
-        awardPoints(currentUser.id, breakdown.total),
-        trackSpecies(currentUser.id, speciesKey),
-        checkAndAwardBadges(currentUser.id),
-      ]);
+      if (isNature) {
+        await Promise.all([
+          awardPoints(currentUser.id, breakdown.total),
+          trackSpecies(currentUser.id, speciesKey),
+          checkAndAwardBadges(currentUser.id),
+        ]);
+      }
 
       setStep('done');
-      setShowToast(true);
+      setShowToast(isNature);
       setTimeout(() => router.replace('/(tabs)'), 2500);
     } catch (err: any) {
       console.error('[postDiscovery error]', err);
@@ -176,11 +181,20 @@ export default function NewDiscoveryScreen() {
   }
 
   if (step === 'review' && result) {
+    const isNature = result.is_nature !== false;
     return (
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }} keyboardShouldPersistTaps="handled">
         <SafeAreaView>
           {imageUri ? <Image source={{ uri: imageUri }} style={{ width: '100%', height: 260 }} resizeMode="cover" /> : null}
+          {!isNature ? (
+            <View style={{ margin: 16, backgroundColor: '#6d3a3c', borderRadius: 14, padding: 16 }}>
+              <Text style={{ fontSize: 16, fontWeight: '800', color: '#eaded0', marginBottom: 4 }}>⚠️ No points awarded</Text>
+              <Text style={{ fontSize: 14, color: '#c7af94' }}>
+                {result.rejection_reason ?? 'This doesn\'t appear to be a wild plant, animal, or fungi. Only nature discoveries earn points!'}
+              </Text>
+            </View>
+          ) : null}
           <FactCard
             commonName={result.common_name}
             scientificName={result.scientific_name}
@@ -230,11 +244,15 @@ export default function NewDiscoveryScreen() {
           </>
         ) : (
           <>
-            <Text style={{ fontSize: 48 }}>🌿</Text>
+            <Text style={{ fontSize: 48 }}>{pointsBreakdown && pointsBreakdown.total > 0 ? '🌿' : '📷'}</Text>
             <Text style={{ fontSize: 22, fontWeight: '700', color: '#4e705e' }}>Discovery Posted!</Text>
-            {pointsBreakdown ? (
+            {pointsBreakdown && pointsBreakdown.total > 0 ? (
               <Text style={{ fontSize: 16, color: '#6d3a3c' }}>+{pointsBreakdown.total} points earned</Text>
-            ) : null}
+            ) : (
+              <Text style={{ fontSize: 14, color: '#6d3a3c', textAlign: 'center', paddingHorizontal: 32 }}>
+                No points — next time try spotting a wild plant, animal, or fungi!
+              </Text>
+            )}
           </>
         )}
       </SafeAreaView>
