@@ -102,6 +102,12 @@ export default function LiveExpeditionScreen() {
     }
     setGpsTracks(d.gpsEnabled);
 
+    // Reset route refs in case this component instance is reused
+    waypointsRef.current = [];
+    lastWaypointCoordsRef.current = null;
+    pathMetersRef.current = 0;
+    startCapturedRef.current = false;
+
     const start = new Date();
     updateLiveExpeditionDraft({
       startTimeIso: start.toISOString(),
