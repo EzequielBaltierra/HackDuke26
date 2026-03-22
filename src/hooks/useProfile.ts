@@ -7,7 +7,7 @@ export async function fetchUserProfile(userId: string) {
     supabase.from('users').select('*').eq('id', userId).single(),
     supabase.from('badges').select('*').eq('user_id', userId).order('earned_at', { ascending: false }),
     supabase.from('discoveries').select('id, image_url, common_name, points_earned, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
-    supabase.from('expeditions').select('id, title, type, points_earned, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
+    supabase.from('expeditions').select('*, users!expeditions_user_id_fkey(id, username, profile_photo_url, total_points)').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
     fetchFollowCounts(userId),
   ]);
 
@@ -15,7 +15,7 @@ export async function fetchUserProfile(userId: string) {
     user: userRes.data as User | null,
     badges: (badgesRes.data ?? []) as Badge[],
     discoveries: (discoveriesRes.data ?? []) as Partial<Discovery>[],
-    expeditions: (expeditionsRes.data ?? []) as Partial<Expedition>[],
+    expeditions: (expeditionsRes.data ?? []) as Expedition[],
     followerCount: counts.followerCount,
     followingCount: counts.followingCount,
   };

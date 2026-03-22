@@ -1,6 +1,6 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View,
@@ -27,13 +27,25 @@ function base64ToUint8Array(base64: string): Uint8Array {
 export default function NewExpeditionScreen() {
   const router = useRouter();
   const { currentUser } = useAuth();
-  const [title, setTitle] = useState('');
+  const params = useLocalSearchParams<{
+    originalId?: string;
+    originalTitle?: string;
+    originalLocation?: string;
+    originalType?: string;
+    originalDifficulty?: string;
+    vibes?: string;
+    originalCreatorUsername?: string;
+  }>();
+  const isRedo = Boolean(params.originalId);
+  const [title, setTitle] = useState(params.originalTitle ?? '');
   const [description, setDescription] = useState('');
-  const [type, setType] = useState<ExpeditionType>('hike');
-  const [location, setLocation] = useState('');
+  const [type, setType] = useState<ExpeditionType>((params.originalType as ExpeditionType) ?? 'hike');
+  const [location, setLocation] = useState(params.originalLocation ?? '');
   const [distance, setDistance] = useState('');
-  const [difficulty, setDifficulty] = useState<Difficulty>('moderate');
-  const [selectedVibeTags, setSelectedVibeTags] = useState<string[]>([]);
+  const [difficulty, setDifficulty] = useState<Difficulty>((params.originalDifficulty as Difficulty) ?? 'moderate');
+  const [selectedVibeTags, setSelectedVibeTags] = useState<string[]>(
+    params.vibes ? (params.vibes as string).split('|').filter(Boolean) : []
+  );
   const [taggedUsernames, setTaggedUsernames] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [posting, setPosting] = useState(false);
@@ -108,6 +120,10 @@ export default function NewExpeditionScreen() {
       Alert.alert('Missing info', 'Please add a title.');
       return;
     }
+    if (!location.trim()) {
+      Alert.alert('Location required', 'Please add a location so others can find this expedition.');
+      return;
+    }
     if (photos.length === 0) {
       Alert.alert('Photo required', 'Please add at least one photo of your expedition.');
       return;
@@ -132,6 +148,8 @@ export default function NewExpeditionScreen() {
         photo_urls: photoUrls,
         is_live: false,
         points_earned: totalPoints,
+        original_expedition_id: isRedo ? (params.originalId ?? null) : null,
+        original_creator_username: isRedo ? (params.originalCreatorUsername || null) : null,
       }).select().single();
 
       if (expedition && taggedUsernames.trim()) {
@@ -145,6 +163,10 @@ export default function NewExpeditionScreen() {
             );
           }
         }
+      }
+
+      if (isRedo && params.originalId) {
+        await supabase.rpc('increment_expedition_trip_count', { expedition_id: params.originalId });
       }
 
       await Promise.all([
@@ -216,8 +238,14 @@ export default function NewExpeditionScreen() {
         </View>
 
         <Label>Title *</Label>
-        <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Morning hike at Eno River"
-          placeholderTextColor="#c7af94" style={inputStyle} />
+        <TextInput
+          value={title}
+          onChangeText={isRedo ? undefined : setTitle}
+          editable={!isRedo}
+          placeholder="e.g. Morning hike at Eno River"
+          placeholderTextColor="#c7af94"
+          style={[inputStyle, isRedo ? { opacity: 0.6 } : null]}
+        />
 
         <Label>Description</Label>
         <TextInput value={description} onChangeText={setDescription} placeholder="What was it like?"
@@ -248,8 +276,14 @@ export default function NewExpeditionScreen() {
         </View>
 
         <Label>Location</Label>
-        <TextInput value={location} onChangeText={setLocation} placeholder="e.g. Eno River State Park"
-          placeholderTextColor="#c7af94" style={inputStyle} />
+        <TextInput
+          value={location}
+          onChangeText={isRedo ? undefined : setLocation}
+          editable={!isRedo}
+          placeholder="e.g. Eno River State Park"
+          placeholderTextColor="#c7af94"
+          style={[inputStyle, isRedo ? { opacity: 0.6 } : null]}
+        />
 
         <Label>Distance (miles)</Label>
         <TextInput value={distance} onChangeText={setDistance} placeholder="e.g. 3.1"
