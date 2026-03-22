@@ -51,12 +51,12 @@ export function PointsToast({ points, visible }: Props) {
         borderWidth: 2,
         borderColor: colors.greenAccent,
       }}>
-        <Text style={{ color: colors.bg, fontFamily: fontFamily.crimsonBold, fontSize: 22 }}>+{points.total} pts ✨</Text>
+        <Text style={{ color: colors.bg, fontFamily: fontFamily.crimsonBold, fontSize: 22 }}>+{points.total} pts</Text>
         {points.new_species_bonus > 0 ? (
           <Text style={{ color: colors.bgAccent, fontFamily: fontFamily.crimson, fontSize: 12, marginTop: 2 }}>New species! +{points.new_species_bonus}</Text>
         ) : null}
         {points.rare_bonus > 0 ? (
-          <Text style={{ color: colors.blueAccent, fontFamily: fontFamily.crimson, fontSize: 12 }}>Rare find! +{points.rare_bonus} 🌟</Text>
+          <Text style={{ color: colors.blueAccent, fontFamily: fontFamily.crimson, fontSize: 12 }}>Rare find! +{points.rare_bonus}</Text>
         ) : null}
       </View>
     </Animated.View>

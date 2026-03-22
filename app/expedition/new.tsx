@@ -10,11 +10,11 @@ import { calculateExpeditionPoints, awardPoints, checkAndAwardBadges } from '../
 import { supabase } from '../../src/lib/supabase';
 import { PointsToast } from '../../src/components/PointsToast';
 import { useAuth } from '../../src/hooks/useAuth';
+import { EXPEDITION_VIBE_TAGS } from '../../src/constants/expeditionVibes';
 import { ExpeditionType, Difficulty, PointsBreakdown } from '../../src/types';
 
 const EXPEDITION_TYPES: ExpeditionType[] = ['trail', 'hike', 'scenic_view', 'walk', 'nature_spot'];
 const DIFFICULTIES: Difficulty[] = ['easy', 'moderate', 'hard'];
-const VIBE_TAGS = ['Peaceful', 'Scenic', 'Adventurous', 'Shaded', 'Wildlife-rich', 'Social', 'Relaxing', 'Water feature'];
 const MAX_PHOTOS = 3;
 
 function base64ToUint8Array(base64: string): Uint8Array {
@@ -257,7 +257,7 @@ export default function NewExpeditionScreen() {
 
         <Label>Vibes</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-          {VIBE_TAGS.map(tag => (
+          {EXPEDITION_VIBE_TAGS.map(tag => (
             <TouchableOpacity key={tag} onPress={() => toggleVibeTag(tag)}
               style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
                 backgroundColor: selectedVibeTags.includes(tag) ? '#4e705e' : '#eaded0',

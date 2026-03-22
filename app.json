@@ -29,7 +29,14 @@
         }
       ],
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Root saves expedition photos you choose to your library.",
+          "savePhotosPermission": "Root saves expedition photos you choose to your library."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
