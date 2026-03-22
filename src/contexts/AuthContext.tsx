@@ -164,6 +164,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function logout() {
     await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
     setCurrentUser(null);
+    const logoutUrl = `https://${domain}/v2/logout?client_id=${clientId}`;
+    await WebBrowser.openBrowserAsync(logoutUrl).catch(() => {});
   }
 
   async function devLogin() {
