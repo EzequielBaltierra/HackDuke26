@@ -222,6 +222,30 @@ const BADGE_RULES: { type: string; check: (userId: string) => Promise<boolean> }
   },
 ];
 
+export type Rank = {
+  name: string;
+  emoji: string;
+  minPoints: number;
+  nextMinPoints: number | null;
+  color: string;
+};
+
+const RANKS: Rank[] = [
+  { name: 'Observer',   emoji: '🪴',    minPoints: 0,      nextMinPoints: 750,   color: '#c7af94' },
+  { name: 'Explorer',   emoji: '🌿',    minPoints: 750,    nextMinPoints: 3500,  color: '#4e705e' },
+  { name: 'Tracker',    emoji: '🌲',    minPoints: 3500,   nextMinPoints: 10000, color: '#6d3a3c' },
+  { name: 'Naturalist', emoji: '🌳',    minPoints: 10000,  nextMinPoints: 30000, color: '#2d6a4f' },
+  { name: 'Ecologist',  emoji: '🌳🌲🌿', minPoints: 30000, nextMinPoints: null,  color: '#361319' },
+];
+
+export function getRank(totalPoints: number): Rank & { progress: number } {
+  const rank = [...RANKS].reverse().find(r => totalPoints >= r.minPoints) ?? RANKS[0];
+  const progress = rank.nextMinPoints
+    ? (totalPoints - rank.minPoints) / (rank.nextMinPoints - rank.minPoints)
+    : 1;
+  return { ...rank, progress: Math.min(progress, 1) };
+}
+
 export async function checkAndAwardBadges(userId: string): Promise<string[]> {
   const { data: existing } = await supabase.from('badges').select('badge_type').eq('user_id', userId);
   const existingTypes = new Set((existing ?? []).map(b => b.badge_type));

@@ -8,6 +8,7 @@ import { Icon } from '../../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { fetchUserProfile } from '../../../src/hooks/useProfile';
+import { getRank } from '../../../src/lib/points';
 import { colors } from '../../../src/theme/colors';
 import { textStyles } from '../../../src/theme/typography';
 import { Badge, Discovery, User } from '../../../src/types';
@@ -17,7 +18,20 @@ const BADGE_LABELS: Record<string, string> = {
   trailblazer: 'Trailblazer',
   explorer: 'Explorer',
   rare_finder: 'Rare Finder',
+  botanist: 'Botanist',
+  entomologist: 'Entomologist',
+  fungi_hunter: 'Fungi Hunter',
+  collector: 'Collector',
+  naturalist: 'Naturalist',
+  summit_seeker: 'Summit Seeker',
+  long_hauler: 'Long Hauler',
+  weekend_warrior: 'Weekend Warrior',
+  trailhead: 'Trailhead',
   social_explorer: 'Social Explorer',
+  trail_buddy: 'Trail Buddy',
+  on_a_roll: 'On a Roll',
+  unstoppable: 'Unstoppable',
+  night_owl: 'Night Owl',
 };
 
 type Profile = {
@@ -71,6 +85,7 @@ export default function PublicProfileScreen() {
   }
 
   const { user, badges, discoveries, followerCount, followingCount } = profile;
+  const rank = getRank(user.total_points);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
@@ -88,6 +103,21 @@ export default function PublicProfileScreen() {
             </View>
           )}
           <Text style={[textStyles.userName, { fontSize: 22, fontWeight: '800' }]}>@{user.username}</Text>
+
+          {/* Rank badge + progress */}
+          <View style={{ alignItems: 'center', marginTop: 10, marginBottom: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: rank.color, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, marginBottom: 8 }}>
+              <Text style={{ fontSize: 16 }}>{rank.emoji}</Text>
+              <Text style={{ fontSize: 15, fontWeight: '800', color: '#eaded0', letterSpacing: 0.5 }}>{rank.name}</Text>
+            </View>
+            <View style={{ width: 180, height: 6, backgroundColor: colors.bgAccent, borderRadius: 3, overflow: 'hidden' }}>
+              <View style={{ width: `${Math.round(rank.progress * 100)}%`, height: 6, backgroundColor: rank.color, borderRadius: 3 }} />
+            </View>
+            <Text style={{ fontSize: 11, color: colors.redBase, marginTop: 4 }}>
+              {user.total_points.toLocaleString()} pts
+            </Text>
+          </View>
+
           {user.bio ? (
             <Text style={[textStyles.postDescription, { color: colors.redBase, textAlign: 'center', marginTop: 4 }]}>{user.bio}</Text>
           ) : null}

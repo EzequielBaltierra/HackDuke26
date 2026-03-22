@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator, Alert, Image, ScrollView, Text,
-  TextInput, TouchableOpacity, View,
+  TextInput, TouchableOpacity, View, Modal, Pressable,
 } from 'react-native';
 import { Icon, IconName } from '../../../src/components/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { fetchUserProfile } from '../../../src/hooks/useProfile';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { supabase } from '../../../src/lib/supabase';
+import { getRank } from '../../../src/lib/points';
 import { colors as themeColors } from '../../../src/theme/colors';
 import { Badge, Discovery, Expedition, User } from '../../../src/types';
 import { ExpeditionCard } from '../../../src/components/ExpeditionCard';
@@ -37,6 +38,27 @@ const BADGE_LABELS: Record<string, string> = {
   night_owl: 'Night Owl',
 };
 
+const BADGE_DESCRIPTIONS: Record<string, string> = {
+  first_discovery: 'Made your very first species discovery.',
+  trailblazer: 'Logged your first expedition.',
+  explorer: 'Completed 5 expeditions.',
+  rare_finder: 'Found your first rare or sensitive species.',
+  botanist: 'Identified 5 unique plant species.',
+  entomologist: 'Identified 3 unique insect species.',
+  fungi_hunter: 'Spotted at least one fungi species.',
+  collector: 'Made 10 total discoveries.',
+  naturalist: 'Made 25 total discoveries.',
+  summit_seeker: 'Completed a hard-difficulty expedition.',
+  long_hauler: 'Finished an expedition of 16+ km.',
+  weekend_warrior: 'Completed 3 expeditions in one week.',
+  trailhead: 'Explored 3 different locations.',
+  social_explorer: 'Had someone join one of your expeditions.',
+  trail_buddy: 'Joined another explorer\'s expedition.',
+  on_a_roll: 'Maintained a 3-day activity streak.',
+  unstoppable: 'Maintained a 7-day activity streak.',
+  night_owl: 'Made a discovery after 9 PM.',
+};
+
 type Profile = {
   user: User | null;
   badges: Badge[];
@@ -53,6 +75,7 @@ export default function ProfileScreen() {
   const [editingBio, setEditingBio] = useState(false);
   const [bioText, setBioText] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
 
   const reload = useCallback(() => {
     if (currentUser) {
@@ -135,6 +158,7 @@ export default function ProfileScreen() {
   }
 
   const { user, badges, discoveries, expeditions, followerCount, followingCount } = profile;
+  const rank = getRank(user.total_points);
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#eaded0' }}>
@@ -157,6 +181,29 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <Text style={{ fontSize: 22, fontWeight: '800', color: '#361319' }}>@{user.username}</Text>
+
+          {/* Rank badge */}
+          <View style={{ alignItems: 'center', marginTop: 10, marginBottom: 4 }}>
+            <View style={{
+              flexDirection: 'row', alignItems: 'center', gap: 6,
+              backgroundColor: rank.color, borderRadius: 20,
+              paddingHorizontal: 14, paddingVertical: 5, marginBottom: 8,
+            }}>
+              <Text style={{ fontSize: 16 }}>{rank.emoji}</Text>
+              <Text style={{ fontSize: 15, fontWeight: '800', color: '#eaded0', letterSpacing: 0.5 }}>{rank.name}</Text>
+            </View>
+            {/* Progress bar */}
+            <View style={{ width: 180, height: 6, backgroundColor: '#c7af94', borderRadius: 3, overflow: 'hidden' }}>
+              <View style={{ width: `${Math.round(rank.progress * 100)}%`, height: 6, backgroundColor: rank.color, borderRadius: 3 }} />
+            </View>
+            {rank.nextMinPoints ? (
+              <Text style={{ fontSize: 11, color: '#6d3a3c', marginTop: 4 }}>
+                {user.total_points.toLocaleString()} / {rank.nextMinPoints.toLocaleString()} pts to next rank
+              </Text>
+            ) : (
+              <Text style={{ fontSize: 11, color: '#6d3a3c', marginTop: 4 }}>Maximum rank achieved 🌍</Text>
+            )}
+          </View>
 
           {editingBio ? (
             <View style={{ width: '100%', marginTop: 8 }}>
@@ -216,21 +263,49 @@ export default function ProfileScreen() {
           <StatCard label="Streak" value={`${user.streak}d`} iconName="campfire" />
           <StatCard label="Spots" value={discoveries.length.toString()} iconName="magnifying-glass" />
         </View>
+        {user.streak > 0 ? (
+          <Text style={{ fontSize: 12, color: '#6d3a3c', textAlign: 'center', marginTop: -8, marginBottom: 8, paddingHorizontal: 24, opacity: 0.8 }}>
+            🔥 Post daily to keep your streak alive!
+          </Text>
+        ) : (
+          <Text style={{ fontSize: 12, color: '#c7af94', textAlign: 'center', marginTop: -8, marginBottom: 8, paddingHorizontal: 24 }}>
+            Post a discovery or expedition today to start a streak
+          </Text>
+        )}
 
         {badges.length > 0 ? (
           <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#361319', marginBottom: 10 }}>Badges</Text>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#361319', marginBottom: 4 }}>Badges</Text>
+            <Text style={{ fontSize: 12, color: '#c7af94', marginBottom: 10 }}>Tap a badge to learn more</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {badges.map(b => (
-                <View key={b.id} style={{ backgroundColor: '#c7af94', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 }}>
+                <TouchableOpacity key={b.id} onPress={() => setSelectedBadge(b.badge_type)} style={{ backgroundColor: '#c7af94', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 }}>
                   <Text style={{ fontSize: 13, fontWeight: '600', color: '#361319' }}>
                     {BADGE_LABELS[b.badge_type] ?? b.badge_type}
                   </Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           </View>
         ) : null}
+
+        {/* Badge description modal */}
+        <Modal visible={selectedBadge !== null} transparent animationType="fade">
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }} onPress={() => setSelectedBadge(null)}>
+            <Pressable style={{ backgroundColor: '#eaded0', borderRadius: 16, padding: 24, marginHorizontal: 32, alignItems: 'center' }} onPress={() => {}}>
+              <Text style={{ fontSize: 28, marginBottom: 8 }}>{(BADGE_LABELS[selectedBadge ?? ''] ?? '').split(' ')[0]}</Text>
+              <Text style={{ fontSize: 17, fontWeight: '800', color: '#361319', marginBottom: 8, textAlign: 'center' }}>
+                {BADGE_LABELS[selectedBadge ?? ''] ?? selectedBadge}
+              </Text>
+              <Text style={{ fontSize: 14, color: '#6d3a3c', textAlign: 'center', lineHeight: 20 }}>
+                {BADGE_DESCRIPTIONS[selectedBadge ?? ''] ?? ''}
+              </Text>
+              <TouchableOpacity onPress={() => setSelectedBadge(null)} style={{ marginTop: 16, backgroundColor: '#4e705e', borderRadius: 10, paddingHorizontal: 24, paddingVertical: 10 }}>
+                <Text style={{ color: '#eaded0', fontWeight: '700' }}>Got it</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
 
         {discoveries.length > 0 ? (
           <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
