@@ -272,8 +272,14 @@ export default function NewExpeditionScreen() {
         </View>
 
         <Label>Location</Label>
-        <TextInput value={location} onChangeText={setLocation} placeholder="e.g. Eno River State Park"
-          placeholderTextColor="#c7af94" style={inputStyle} />
+        <TextInput
+          value={location}
+          onChangeText={isRedo ? undefined : setLocation}
+          editable={!isRedo}
+          placeholder="e.g. Eno River State Park"
+          placeholderTextColor="#c7af94"
+          style={[inputStyle, isRedo ? { opacity: 0.6 } : null]}
+        />
 
         <Label>Distance (miles)</Label>
         <TextInput value={distance} onChangeText={setDistance} placeholder="e.g. 3.1"
